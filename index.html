@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web-CAD Studio – Parametrisches 3D-CAD & Engineering Tool</title>
+  <title>Web-CAD Studio – Parametric 3D CAD & Engineering Tool</title>
   <link rel="stylesheet" href="style.css">
   <!-- Three.js & OrbitControls via CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -20,9 +20,9 @@
     </div>
 
     <div class="header-actions">
-      <button class="tool-btn" id="btn-spec-sheet">📄 Datenblatt</button>
+      <button class="tool-btn" id="btn-spec-sheet">📄 Spec Sheet</button>
       <button class="tool-btn" id="btn-export-obj">📦 Export OBJ</button>
-      <button class="tool-btn primary" id="btn-export-stl">💾 Export STL (3D-Druck)</button>
+      <button class="tool-btn primary" id="btn-export-stl">💾 Export STL (3D Print)</button>
     </div>
   </header>
 
@@ -30,31 +30,31 @@
   <div id="toolbar">
     <!-- View Orientations -->
     <div class="tool-group">
-      <button class="tool-btn" data-view="iso">Isometrie</button>
-      <button class="tool-btn" data-view="top">Draufsicht</button>
-      <button class="tool-btn" data-view="front">Vorne</button>
-      <button class="tool-btn" data-view="right">Rechts</button>
-      <button class="tool-btn" id="btn-ortho-toggle">🎥 Perspektive</button>
+      <button class="tool-btn" data-view="iso">Isometric</button>
+      <button class="tool-btn" data-view="top">Top</button>
+      <button class="tool-btn" data-view="front">Front</button>
+      <button class="tool-btn" data-view="right">Right</button>
+      <button class="tool-btn" id="btn-ortho-toggle">🎥 Perspective</button>
     </div>
 
     <div class="tool-sep"></div>
 
     <!-- Render Modes -->
     <div class="tool-group">
-      <button class="tool-btn active" data-mode="shaded-edges">CAD-Kanten</button>
-      <button class="tool-btn" data-mode="shaded">Schattiert</button>
-      <button class="tool-btn" data-mode="wireframe">Gitter</button>
-      <button class="tool-btn" data-mode="ghost">Röntgen (X-Ray)</button>
-      <button class="tool-btn" data-mode="normals">Normalen</button>
+      <button class="tool-btn active" data-mode="shaded-edges">CAD Edges</button>
+      <button class="tool-btn" data-mode="shaded">Shaded</button>
+      <button class="tool-btn" data-mode="wireframe">Wireframe</button>
+      <button class="tool-btn" data-mode="ghost">X-Ray</button>
+      <button class="tool-btn" data-mode="normals">Normals</button>
     </div>
 
     <div class="tool-sep"></div>
 
     <!-- Inspection Tools -->
     <div class="tool-group">
-      <button class="tool-btn" id="btn-clipping-toggle">✂️ Schnittebene</button>
-      <button class="tool-btn" id="btn-dim-toggle">📏 Bemaßung</button>
-      <button class="tool-btn active" id="btn-grid-toggle">▦ Raster</button>
+      <button class="tool-btn" id="btn-clipping-toggle">✂️ Section Plane</button>
+      <button class="tool-btn" id="btn-dim-toggle">📏 Dimensions</button>
+      <button class="tool-btn active" id="btn-grid-toggle">▦ Grid</button>
     </div>
   </div>
 
@@ -64,17 +64,17 @@
     <!-- Left Sidebar: Part Catalog -->
     <aside class="sidebar sidebar-left">
       <div class="sidebar-header">
-        <span>Bauteil-Bibliothek</span>
+        <span>Part Library</span>
       </div>
       <div class="sidebar-content">
-        <div class="catalog-section-title">Maschinenbau & Mechanik</div>
+        <div class="catalog-section-title">Mechanical Engineering</div>
         <div id="catalog-list">
           <!-- Dynamically populated from PART_SCHEMAS -->
         </div>
 
         <div style="margin-top: 24px; padding: 12px; background: rgba(0, 136, 255, 0.05); border: 1px dashed rgba(0, 136, 255, 0.3); border-radius: 6px; font-size: 0.76rem; color: #8e95a5; line-height: 1.5; text-align: center;">
-          📁 <strong>Drag & Drop</strong><br>
-          Eigene <code>.stl</code> Datei direkt ins 3D-Fenster ziehen zum Messen & Schneiden.
+          📁 <strong>Drag &amp; Drop</strong><br>
+          Drop a custom <code>.stl</code> file directly into the 3D viewport to measure &amp; section.
         </div>
       </div>
     </aside>
@@ -84,24 +84,24 @@
       <!-- Top HUD -->
       <div class="viewport-hud hud-top-left">
         <div class="hud-chip">
-          <span>Bauteil:</span> <strong id="sb-part-name">Stirnrad</strong>
+          <span>Part:</span> <strong id="sb-part-name">Spur Gear</strong>
         </div>
         <div class="hud-chip">
-          <span>Mesh:</span> <strong id="sb-triangles">0 Dreiecke</strong>
+          <span>Mesh:</span> <strong id="sb-triangles">0 Triangles</strong>
         </div>
       </div>
 
       <div class="viewport-hud hud-top-right">
-        <button class="hud-btn" data-view="iso" title="Kamera zurücksetzen">Reset Ansicht</button>
+        <button class="hud-btn" data-view="iso" title="Reset camera">Reset View</button>
       </div>
 
       <!-- Interactive Section / Clipping Plane Slider Widget -->
       <div id="clipping-widget">
-        <span style="font-size: 0.82rem; font-weight: 600; color: #00d2d3;">✂️ Schnittebene:</span>
+        <span style="font-size: 0.82rem; font-weight: 600; color: #00d2d3;">✂️ Section Plane:</span>
         <select id="clipping-axis" class="cad-select" style="width: auto; padding: 2px 8px; margin: 0;">
-          <option value="y">Y-Achse (Horizontal)</option>
-          <option value="x">X-Achse (Quer)</option>
-          <option value="z">Z-Achse (Längs)</option>
+          <option value="y">Y-Axis (Horizontal)</option>
+          <option value="x">X-Axis (Transverse)</option>
+          <option value="z">Z-Axis (Longitudinal)</option>
         </select>
         <input type="range" id="clipping-slider" class="cad-slider" min="-80" max="80" step="1" value="0" style="width: 140px;">
         <span id="clipping-val-display" style="font-family: monospace; font-size: 0.8rem; color: #fff; width: 55px;">0 mm</span>
@@ -111,7 +111,7 @@
     <!-- Right Sidebar: Parameter & Inspection Panel -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <span>Konstruktion & Metrik</span>
+        <span>Design &amp; Metrics</span>
       </div>
       <div class="sidebar-content">
         <!-- Live Parametric Inputs -->
@@ -121,34 +121,34 @@
 
         <!-- Material Selection & Physical Properties -->
         <div class="metrics-card">
-          <div class="param-group-title">Werkstoff & Kennwerte</div>
+          <div class="param-group-title">Material &amp; Properties</div>
           <div style="margin-bottom: 10px;">
             <label style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase;">Material</label>
             <select id="material-select" class="cad-select">
-              <option value="steel">Werkzeugstahl (7.85 g/cm³)</option>
-              <option value="aluminum">Aluminium eloxiert (2.70 g/cm³)</option>
-              <option value="brass">Messing CuZn39 (8.50 g/cm³)</option>
+              <option value="steel">Tool Steel (7.85 g/cm³)</option>
+              <option value="aluminum">Anodized Aluminum (2.70 g/cm³)</option>
+              <option value="brass">Brass CuZn39 (8.50 g/cm³)</option>
               <option value="plastic_orange">PLA Polymer Orange (1.24 g/cm³)</option>
-              <option value="plastic_white">POM-C Weiß (1.41 g/cm³)</option>
-              <option value="cast_iron">Grauguss (7.20 g/cm³)</option>
+              <option value="plastic_white">POM-C White (1.41 g/cm³)</option>
+              <option value="cast_iron">Gray Cast Iron (7.20 g/cm³)</option>
             </select>
           </div>
 
           <div class="metrics-grid">
             <div class="metric-item">
-              <div class="metric-label">Volumen</div>
+              <div class="metric-label">Volume</div>
               <div class="metric-val" id="metric-vol">0.00 cm³</div>
             </div>
             <div class="metric-item">
-              <div class="metric-label">Masse</div>
+              <div class="metric-label">Mass</div>
               <div class="metric-val" id="metric-mass" style="color: var(--accent-gold);">0.0 g</div>
             </div>
             <div class="metric-item">
-              <div class="metric-label">Oberfläche</div>
+              <div class="metric-label">Surface Area</div>
               <div class="metric-val" id="metric-area">0.0 cm²</div>
             </div>
             <div class="metric-item">
-              <div class="metric-label">Hüllmaße (BBox)</div>
+              <div class="metric-label">Bounding Box</div>
               <div class="metric-val" id="metric-bbox" style="font-size: 0.78rem;">0 × 0 × 0 mm</div>
             </div>
           </div>
@@ -161,12 +161,12 @@
   <!-- Bottom Statusbar -->
   <footer id="statusbar">
     <div class="status-group">
-      <span><span class="status-dot"></span>Bereit</span>
-      <span>Einheit: Millimeter (mm)</span>
-      <span>Koordinatensystem: DIN ISO 841 (Z=oben)</span>
+      <span><span class="status-dot"></span>Ready</span>
+      <span>Unit: Millimeters (mm)</span>
+      <span>Coordinate System: DIN ISO 841 (Z=Up)</span>
     </div>
     <div class="status-group">
-      <span>Orbit: Linke Maustaste | Pan: Rechte Maustaste | Zoom: Rad</span>
+      <span>Orbit: Left Mouse | Pan: Right Mouse | Zoom: Scroll</span>
     </div>
   </footer>
 
@@ -174,7 +174,7 @@
   <div class="modal-overlay" id="spec-modal">
     <div class="modal-window">
       <div class="modal-header">
-        <h3>Technisches Datenblatt & Spezifikation</h3>
+        <h3>Technical Data Sheet &amp; Specification</h3>
         <button class="modal-close-btn" id="modal-close">&times;</button>
       </div>
       <div class="modal-body" id="modal-spec-content">

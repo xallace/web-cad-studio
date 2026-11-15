@@ -4,99 +4,99 @@
 
 // Density in g/cm³
 const MATERIAL_DENSITIES = {
-  steel: { name: 'Werkzeugstahl (1.2379)', density: 7.85 },
-  aluminum: { name: 'Aluminium (AlMgSi0.5)', density: 2.70 },
-  brass: { name: 'Messing (CuZn39Pb3)', density: 8.50 },
-  plastic_orange: { name: 'PLA Polymer (3D-Druck)', density: 1.24 },
+  steel: { name: 'Tool Steel (1.2379)', density: 7.85 },
+  aluminum: { name: 'Aluminum (AlMgSi0.5)', density: 2.70 },
+  brass: { name: 'Brass (CuZn39Pb3)', density: 8.50 },
+  plastic_orange: { name: 'PLA Polymer (3D Print)', density: 1.24 },
   plastic_white: { name: 'POM-C (Polyacetal)', density: 1.41 },
-  cast_iron: { name: 'Grauguss (GJL-250)', density: 7.20 }
+  cast_iron: { name: 'Gray Cast Iron (GJL-250)', density: 7.20 }
 };
 
 // Part parameter schemas
 const PART_SCHEMAS = {
   gear: {
-    name: 'Stirnrad (Evolvente)',
+    name: 'Spur Gear (Involute)',
     icon: '⚙️',
-    description: 'DIN 867 Zahnrad mit Evolventenflanke, Passfedernut DIN 6885 und Nabe',
+    description: 'DIN 867 involute gear with DIN 6885 keyway & hub',
     generator: (p) => ParametricParts.generateSpurGear(p),
     params: [
-      { id: 'module', label: 'Modul (m)', min: 1.0, max: 10.0, step: 0.5, default: 3.0, unit: 'mm' },
-      { id: 'teeth', label: 'Zähnezahl (z)', min: 8, max: 80, step: 1, default: 24, unit: '' },
-      { id: 'faceWidth', label: 'Zahnbreite (b)', min: 5, max: 80, step: 1, default: 20, unit: 'mm' },
-      { id: 'boreDiameter', label: 'Bohrungs-Ø (d_i)', min: 6, max: 60, step: 1, default: 18, unit: 'mm' },
-      { id: 'pressureAngle', label: 'Eingriffswinkel (α)', min: 14.5, max: 25.0, step: 0.5, default: 20.0, unit: '°' },
-      { id: 'hasKeyway', label: 'Passfedernut aktiv', type: 'checkbox', default: true },
-      { id: 'keywayWidth', label: 'Nutbreite (b)', min: 2, max: 16, step: 1, default: 6, unit: 'mm' },
-      { id: 'keywayDepth', label: 'Nuttiefe (t)', min: 1, max: 8, step: 0.2, default: 2.8, unit: 'mm' },
-      { id: 'hasHub', label: 'Nabe vorhanden', type: 'checkbox', default: true },
-      { id: 'hubDiameter', label: 'Naben-Ø', min: 15, max: 80, step: 1, default: 36, unit: 'mm' },
-      { id: 'hubLength', label: 'Nabenlänge', min: 2, max: 40, step: 1, default: 10, unit: 'mm' }
+      { id: 'module', label: 'Module (m)', min: 1.0, max: 10.0, step: 0.5, default: 3.0, unit: 'mm' },
+      { id: 'teeth', label: 'Number of Teeth (z)', min: 8, max: 80, step: 1, default: 24, unit: '' },
+      { id: 'faceWidth', label: 'Face Width (b)', min: 5, max: 80, step: 1, default: 20, unit: 'mm' },
+      { id: 'boreDiameter', label: 'Bore Ø (d_i)', min: 6, max: 60, step: 1, default: 18, unit: 'mm' },
+      { id: 'pressureAngle', label: 'Pressure Angle (α)', min: 14.5, max: 25.0, step: 0.5, default: 20.0, unit: '°' },
+      { id: 'hasKeyway', label: 'Keyway Enabled', type: 'checkbox', default: true },
+      { id: 'keywayWidth', label: 'Keyway Width (b)', min: 2, max: 16, step: 1, default: 6, unit: 'mm' },
+      { id: 'keywayDepth', label: 'Keyway Depth (t)', min: 1, max: 8, step: 0.2, default: 2.8, unit: 'mm' },
+      { id: 'hasHub', label: 'Hub Enabled', type: 'checkbox', default: true },
+      { id: 'hubDiameter', label: 'Hub Ø', min: 15, max: 80, step: 1, default: 36, unit: 'mm' },
+      { id: 'hubLength', label: 'Hub Length', min: 2, max: 40, step: 1, default: 10, unit: 'mm' }
     ]
   },
   flange: {
-    name: 'Rohrflansch (DIN/EN)',
+    name: 'Pipe Flange (DIN/EN)',
     icon: '🔘',
-    description: 'Flansch mit Schweißansatz, Lochkreis und Dichtleiste nach EN 1092-1',
+    description: 'EN 1092-1 weld-neck flange, bolt circle & raised face',
     generator: (p) => ParametricParts.generatePipeFlange(p),
     params: [
-      { id: 'flangeDia', label: 'Flansch-Außen-Ø', min: 80, max: 300, step: 5, default: 165, unit: 'mm' },
-      { id: 'flangeThick', label: 'Flanschblattdicke (C)', min: 10, max: 50, step: 1, default: 18, unit: 'mm' },
-      { id: 'pipeOutDia', label: 'Rohransatz-Außen-Ø', min: 40, max: 200, step: 1, default: 76.1, unit: 'mm' },
-      { id: 'pipeInDia', label: 'Rohr-Innenbohrung-Ø', min: 25, max: 180, step: 1, default: 60.0, unit: 'mm' },
-      { id: 'neckHeight', label: 'Schweißansatzhöhe (H)', min: 10, max: 100, step: 5, default: 35, unit: 'mm' },
-      { id: 'boltCircleDia', label: 'Lochkreis-Ø (K)', min: 60, max: 250, step: 5, default: 125, unit: 'mm' },
-      { id: 'numBolts', label: 'Schraubenlöcher (n)', min: 4, max: 16, step: 2, default: 4, unit: '' },
-      { id: 'boltHoleDia', label: 'Schraubenloch-Ø (d)', min: 8, max: 30, step: 1, default: 18, unit: 'mm' },
-      { id: 'hasRaisedFace', label: 'Dichtleiste aktiv', type: 'checkbox', default: true },
-      { id: 'raisedFaceDia', label: 'Dichtleisten-Ø', min: 50, max: 200, step: 5, default: 110, unit: 'mm' },
-      { id: 'raisedFaceHeight', label: 'Dichtleistenhöhe', min: 1, max: 10, step: 0.5, default: 3, unit: 'mm' }
+      { id: 'flangeDia', label: 'Flange Outer Ø', min: 80, max: 300, step: 5, default: 165, unit: 'mm' },
+      { id: 'flangeThick', label: 'Flange Thickness (C)', min: 10, max: 50, step: 1, default: 18, unit: 'mm' },
+      { id: 'pipeOutDia', label: 'Pipe Neck Outer Ø', min: 40, max: 200, step: 1, default: 76.1, unit: 'mm' },
+      { id: 'pipeInDia', label: 'Pipe Inner Bore Ø', min: 25, max: 180, step: 1, default: 60.0, unit: 'mm' },
+      { id: 'neckHeight', label: 'Welding Neck Height (H)', min: 10, max: 100, step: 5, default: 35, unit: 'mm' },
+      { id: 'boltCircleDia', label: 'Bolt Circle Ø (K)', min: 60, max: 250, step: 5, default: 125, unit: 'mm' },
+      { id: 'numBolts', label: 'Bolt Holes (n)', min: 4, max: 16, step: 2, default: 4, unit: '' },
+      { id: 'boltHoleDia', label: 'Bolt Hole Ø (d)', min: 8, max: 30, step: 1, default: 18, unit: 'mm' },
+      { id: 'hasRaisedFace', label: 'Raised Face Enabled', type: 'checkbox', default: true },
+      { id: 'raisedFaceDia', label: 'Raised Face Ø', min: 50, max: 200, step: 5, default: 110, unit: 'mm' },
+      { id: 'raisedFaceHeight', label: 'Raised Face Height', min: 1, max: 10, step: 0.5, default: 3, unit: 'mm' }
     ]
   },
   enclosure: {
-    name: 'Elektronik-Gehäuse',
+    name: 'Electronics Enclosure',
     icon: '📦',
-    description: 'Gerätegehäuse mit parametrischer Wandstärke, Rundung und 4 Eck-Schraubendomen',
+    description: 'Parametric housing with corner radii & 4 screw bosses',
     generator: (p) => ParametricParts.generateEnclosure(p),
     params: [
-      { id: 'length', label: 'Länge (X)', min: 50, max: 300, step: 5, default: 140, unit: 'mm' },
-      { id: 'width', label: 'Breite (Y)', min: 40, max: 200, step: 5, default: 90, unit: 'mm' },
-      { id: 'height', label: 'Gesamthöhe (Z)', min: 20, max: 120, step: 2, default: 45, unit: 'mm' },
-      { id: 'wallThickness', label: 'Wandstärke', min: 1.5, max: 8.0, step: 0.5, default: 3.0, unit: 'mm' },
-      { id: 'cornerRadius', label: 'Eckenradius (R)', min: 1, max: 25, step: 1, default: 8, unit: 'mm' },
-      { id: 'bossDiameter', label: 'Schraubendome-Ø', min: 6, max: 18, step: 1, default: 10, unit: 'mm' },
-      { id: 'bossHoleDia', label: 'Schrauben-Kernloch-Ø', min: 2.0, max: 6.0, step: 0.2, default: 3.2, unit: 'mm' }
+      { id: 'length', label: 'Length (X)', min: 50, max: 300, step: 5, default: 140, unit: 'mm' },
+      { id: 'width', label: 'Width (Y)', min: 40, max: 200, step: 5, default: 90, unit: 'mm' },
+      { id: 'height', label: 'Total Height (Z)', min: 20, max: 120, step: 2, default: 45, unit: 'mm' },
+      { id: 'wallThickness', label: 'Wall Thickness', min: 1.5, max: 8.0, step: 0.5, default: 3.0, unit: 'mm' },
+      { id: 'cornerRadius', label: 'Corner Radius (R)', min: 1, max: 25, step: 1, default: 8, unit: 'mm' },
+      { id: 'bossDiameter', label: 'Screw Boss Ø', min: 6, max: 18, step: 1, default: 10, unit: 'mm' },
+      { id: 'bossHoleDia', label: 'Screw Pilot Hole Ø', min: 2.0, max: 6.0, step: 0.2, default: 3.2, unit: 'mm' }
     ]
   },
   shaft: {
-    name: 'Getriebewelle (Abgestuft)',
+    name: 'Gearbox Shaft (Stepped)',
     icon: '🪄',
-    description: 'Mehrstufige Welle mit Lagersitzen, Wellenbund, Fasen und Zentrierbohrung',
+    description: 'Multi-stepped shaft with bearing seats & chamfers',
     generator: (p) => ParametricParts.generateSteppedShaft(p),
     params: [
-      { id: 'dia1', label: 'Stufe 1 Ø (Antrieb)', min: 10, max: 60, step: 1, default: 25, unit: 'mm' },
-      { id: 'len1', label: 'Stufe 1 Länge', min: 10, max: 80, step: 5, default: 30, unit: 'mm' },
-      { id: 'dia2', label: 'Stufe 2 Ø (Lagersitz 1)', min: 15, max: 80, step: 1, default: 35, unit: 'mm' },
-      { id: 'len2', label: 'Stufe 2 Länge', min: 15, max: 100, step: 5, default: 50, unit: 'mm' },
-      { id: 'dia3', label: 'Stufe 3 Ø (Wellenbund)', min: 25, max: 120, step: 1, default: 50, unit: 'mm' },
-      { id: 'len3', label: 'Stufe 3 Länge', min: 10, max: 80, step: 5, default: 25, unit: 'mm' },
-      { id: 'dia4', label: 'Stufe 4 Ø (Lagersitz 2)', min: 15, max: 80, step: 1, default: 35, unit: 'mm' },
-      { id: 'len4', label: 'Stufe 4 Länge', min: 15, max: 100, step: 5, default: 45, unit: 'mm' },
-      { id: 'chamfer', label: 'Einführfase', min: 0.5, max: 4.0, step: 0.5, default: 1.5, unit: 'mm' },
-      { id: 'centerBore', label: 'Zentrierbohrungs-Ø', min: 0, max: 12, step: 1, default: 6, unit: 'mm' }
+      { id: 'dia1', label: 'Step 1 Ø (Drive End)', min: 10, max: 60, step: 1, default: 25, unit: 'mm' },
+      { id: 'len1', label: 'Step 1 Length', min: 10, max: 80, step: 5, default: 30, unit: 'mm' },
+      { id: 'dia2', label: 'Step 2 Ø (Bearing Seat 1)', min: 15, max: 80, step: 1, default: 35, unit: 'mm' },
+      { id: 'len2', label: 'Step 2 Length', min: 15, max: 100, step: 5, default: 50, unit: 'mm' },
+      { id: 'dia3', label: 'Step 3 Ø (Shoulder)', min: 25, max: 120, step: 1, default: 50, unit: 'mm' },
+      { id: 'len3', label: 'Step 3 Length', min: 10, max: 80, step: 5, default: 25, unit: 'mm' },
+      { id: 'dia4', label: 'Step 4 Ø (Bearing Seat 2)', min: 15, max: 80, step: 1, default: 35, unit: 'mm' },
+      { id: 'len4', label: 'Step 4 Length', min: 15, max: 100, step: 5, default: 45, unit: 'mm' },
+      { id: 'chamfer', label: 'Lead-in Chamfer', min: 0.5, max: 4.0, step: 0.5, default: 1.5, unit: 'mm' },
+      { id: 'centerBore', label: 'Center Hole Ø', min: 0, max: 12, step: 1, default: 6, unit: 'mm' }
     ]
   },
   bolt: {
-    name: 'Sechskantschraube & Mutter',
+    name: 'Hex Bolt & Nut',
     icon: '🔩',
-    description: 'DIN 933 Sechskantschraube mit Schaft und frei positionierbarer Sechskantmutter',
+    description: 'DIN 933 hex bolt with shaft & positionable hex nut',
     generator: (p) => ParametricParts.generateHexBolt(p),
     params: [
-      { id: 'dia', label: 'Gewindedurchmesser (d)', min: 4, max: 30, step: 2, default: 12, unit: 'mm' },
-      { id: 'length', label: 'Schaftlänge (l)', min: 15, max: 150, step: 5, default: 55, unit: 'mm' },
-      { id: 'headWidth', label: 'Schlüsselweite (SW)', min: 7, max: 46, step: 1, default: 19, unit: 'mm' },
-      { id: 'headHeight', label: 'Kopfhöhe (k)', min: 3, max: 20, step: 0.5, default: 7.5, unit: 'mm' },
-      { id: 'hasNut', label: 'Mutter anzeigen', type: 'checkbox', default: true },
-      { id: 'nutPosition', label: 'Mutter-Position entlang Schaft', min: 2, max: 140, step: 2, default: 35, unit: 'mm' }
+      { id: 'dia', label: 'Thread Diameter (d)', min: 4, max: 30, step: 2, default: 12, unit: 'mm' },
+      { id: 'length', label: 'Shank Length (l)', min: 15, max: 150, step: 5, default: 55, unit: 'mm' },
+      { id: 'headWidth', label: 'Width Across Flats (s)', min: 7, max: 46, step: 1, default: 19, unit: 'mm' },
+      { id: 'headHeight', label: 'Head Height (k)', min: 3, max: 20, step: 0.5, default: 7.5, unit: 'mm' },
+      { id: 'hasNut', label: 'Show Hex Nut', type: 'checkbox', default: true },
+      { id: 'nutPosition', label: 'Nut Position Along Shank', min: 2, max: 140, step: 2, default: 35, unit: 'mm' }
     ]
   }
 };
@@ -121,10 +121,13 @@ class AppController {
       const card = document.createElement('div');
       card.className = `part-card ${key === this.currentPartKey ? 'active' : ''}`;
       card.id = `card-${key}`;
+      const shortDesc = schema.description.length > 56
+        ? `${schema.description.slice(0, 56).replace(/\s+\S*$/, '')}...`
+        : schema.description;
       card.innerHTML = `
         <div class="part-card-info">
           <h4>${schema.name}</h4>
-          <p>${schema.description.slice(0, 48)}...</p>
+          <p>${shortDesc}</p>
         </div>
         <div class="part-icon">${schema.icon}</div>
       `;
@@ -150,7 +153,7 @@ class AppController {
       const isOrtho = !this.engine.isOrtho;
       this.engine.setCameraProjection(isOrtho);
       orthoBtn.classList.toggle('active', isOrtho);
-      orthoBtn.textContent = isOrtho ? '📐 Orthografisch' : '🎥 Perspektive';
+      orthoBtn.textContent = isOrtho ? '📐 Orthographic' : '🎥 Perspective';
     };
 
     // Render mode buttons
@@ -248,7 +251,7 @@ class AppController {
 
     const group = document.createElement('div');
     group.className = 'param-group';
-    group.innerHTML = `<div class="param-group-title">${schema.name} Parameter</div>`;
+    group.innerHTML = `<div class="param-group-title">${schema.name} Parameters</div>`;
 
     schema.params.forEach(p => {
       const row = document.createElement('div');
@@ -380,7 +383,7 @@ class AppController {
   updateStatusBar() {
     if (!this.currentGeometry) return;
     const triangleCount = (this.currentGeometry.attributes.position.count / 3) || 0;
-    document.getElementById('sb-triangles').textContent = `Dreiecke: ${triangleCount.toLocaleString()}`;
+    document.getElementById('sb-triangles').textContent = `${triangleCount.toLocaleString('en-US')} Triangles`;
     document.getElementById('sb-part-name').textContent = PART_SCHEMAS[this.currentPartKey].name;
   }
 
@@ -393,30 +396,31 @@ class AppController {
     const schema = PART_SCHEMAS[this.currentPartKey];
     schema.params.forEach(p => {
       const val = this.currentParams[p.id];
+      const formattedVal = typeof val === 'boolean' ? (val ? 'Yes' : 'No') : val;
       paramRows += `<tr>
         <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">${p.label}</td>
-        <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${val} ${p.unit || ''}</td>
+        <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${formattedVal} ${p.unit || ''}</td>
       </tr>`;
     });
 
     body.innerHTML = `
       <div style="margin-bottom: 16px;">
         <h4 style="color:#00d2d3; margin-bottom:4px;">${schema.name}</h4>
-        <p style="font-size:0.82rem; color:#888;">Erstellt mit Web-CAD Studio am ${new Date().toLocaleDateString('de-DE')} um ${new Date().toLocaleTimeString('de-DE')}</p>
+        <p style="font-size:0.82rem; color:#888;">Generated with Web-CAD Studio on ${new Date().toLocaleDateString('en-US')} at ${new Date().toLocaleTimeString('en-US')}</p>
       </div>
 
       <div style="background:#15171d; border-radius:6px; padding:12px; margin-bottom:16px;">
-        <h5 style="color:#d4af37; margin-bottom:8px; text-transform:uppercase; font-size:0.75rem;">Physikalische Kennwerte</h5>
+        <h5 style="color:#d4af37; margin-bottom:8px; text-transform:uppercase; font-size:0.75rem;">Physical Properties</h5>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.85rem;">
           <div>Material: <strong>${this.lastMetrics.material}</strong></div>
-          <div>Masse: <strong>${this.lastMetrics.massGram > 1000 ? (this.lastMetrics.massGram / 1000).toFixed(3) + ' kg' : this.lastMetrics.massGram.toFixed(1) + ' g'}</strong></div>
-          <div>Volumen: <strong>${this.lastMetrics.volumeCm3.toFixed(2)} cm³</strong></div>
-          <div>Oberfläche: <strong>${this.lastMetrics.areaCm2.toFixed(1)} cm²</strong></div>
-          <div style="grid-column: span 2;">Hüllmaße (BBox): <strong>${this.lastMetrics.bbox}</strong></div>
+          <div>Mass: <strong>${this.lastMetrics.massGram > 1000 ? (this.lastMetrics.massGram / 1000).toFixed(3) + ' kg' : this.lastMetrics.massGram.toFixed(1) + ' g'}</strong></div>
+          <div>Volume: <strong>${this.lastMetrics.volumeCm3.toFixed(2)} cm³</strong></div>
+          <div>Surface Area: <strong>${this.lastMetrics.areaCm2.toFixed(1)} cm²</strong></div>
+          <div style="grid-column: span 2;">Bounding Box: <strong>${this.lastMetrics.bbox}</strong></div>
         </div>
       </div>
 
-      <h5 style="color:#d4af37; margin-bottom:8px; text-transform:uppercase; font-size:0.75rem;">Konstruktionsparameter</h5>
+      <h5 style="color:#d4af37; margin-bottom:8px; text-transform:uppercase; font-size:0.75rem;">Design Parameters</h5>
       <table style="width:100%; border-collapse: collapse; font-size:0.85rem;">
         ${paramRows}
       </table>
@@ -493,9 +497,9 @@ class AppController {
         this.currentGeometry = geom;
         this.engine.setMesh(geom);
         this.updateMetrics();
-        document.getElementById('sb-part-name').textContent = `Import: ${file.name}`;
+        document.getElementById('sb-part-name').textContent = `Imported: ${file.name}`;
       } catch (err) {
-        alert('Fehler beim Laden der Datei. Bitte stelle sicher, dass es sich um eine gültige Binär-STL handelt.');
+        alert('Error loading file. Please make sure it is a valid binary STL file.');
       }
     };
     reader.readAsArrayBuffer(file);

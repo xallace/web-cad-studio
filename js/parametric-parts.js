@@ -5,29 +5,29 @@
 
 const ParametricParts = {
   /**
-   * 1. Involute Spur Gear (Stirnrad mit Evolventenverzahnung, Bohrung, Passfedernut & Nabe)
+   * 1. Involute Spur Gear (with bore, keyway & hub)
    */
   generateSpurGear(params) {
-    const m = parseFloat(params.module || 3.0); // Modul in mm
-    const z = parseInt(params.teeth || 24);    // Zähnezahl
-    const alpha = (parseFloat(params.pressureAngle || 20) * Math.PI) / 180; // Eingriffswinkel
-    const b = parseFloat(params.faceWidth || 20.0); // Zahnbreite in mm
-    const bore = parseFloat(params.boreDiameter || 18.0); // Bohrungsdurchmesser
+    const m = parseFloat(params.module || 3.0); // Module in mm
+    const z = parseInt(params.teeth || 24);    // Number of teeth
+    const alpha = (parseFloat(params.pressureAngle || 20) * Math.PI) / 180; // Pressure angle
+    const b = parseFloat(params.faceWidth || 20.0); // Face width in mm
+    const bore = parseFloat(params.boreDiameter || 18.0); // Bore diameter
     const hasKeyway = params.hasKeyway !== false;
-    const kwWidth = parseFloat(params.keywayWidth || 6.0); // Passfedernutbreite
-    const kwDepth = parseFloat(params.keywayDepth || 2.8); // Passfedernuttiefe
+    const kwWidth = parseFloat(params.keywayWidth || 6.0); // Keyway width
+    const kwDepth = parseFloat(params.keywayDepth || 2.8); // Keyway depth
     const hasHub = params.hasHub !== false;
     const hubDia = parseFloat(params.hubDiameter || 36.0);
     const hubLen = parseFloat(params.hubLength || 10.0);
 
     // Gear tooth geometry formulas
-    const d = m * z; // Teilkreisdurchmesser (Pitch dia)
+    const d = m * z; // Pitch diameter
     const r = d / 2.0;
-    const ha = m; // Kopfhöhe (Addendum)
-    const hf = 1.25 * m; // Fußhöhe (Dedendum)
-    const ra = r + ha; // Kopfkreisradius (Tip radius)
-    const rf = Math.max(0.1, r - hf); // Fußkreisradius (Root radius)
-    const rb = r * Math.cos(alpha); // Grundkreisradius (Base radius)
+    const ha = m; // Addendum
+    const hf = 1.25 * m; // Dedendum
+    const ra = r + ha; // Tip radius
+    const rf = Math.max(0.1, r - hf); // Root radius
+    const rb = r * Math.cos(alpha); // Base radius
 
     const shape = new THREE.Shape();
     const toothAngle = (2 * Math.PI) / z;
@@ -122,17 +122,17 @@ const ParametricParts = {
   },
 
   /**
-   * 2. Pipe Flange (Rohrflansch mit Lochkreis nach DIN / EN 1092)
+   * 2. Pipe Flange (Bolt circle per DIN / EN 1092-1)
    */
   generatePipeFlange(params) {
-    const dFlange = parseFloat(params.flangeDia || 165.0); // Flansch-Außendurchmesser
-    const tFlange = parseFloat(params.flangeThick || 18.0); // Flanschblattdicke
-    const dPipeOut = parseFloat(params.pipeOutDia || 76.1); // Rohransatz Außen (z.B. DN65)
-    const dPipeIn = parseFloat(params.pipeInDia || 60.0);  // Rohr Innenbohrung
-    const hNeck = parseFloat(params.neckHeight || 35.0);   // Ansatzhöhe
-    const dBoltCircle = parseFloat(params.boltCircleDia || 125.0); // Lochkreisdurchmesser
-    const numBolts = parseInt(params.numBolts || 4);       // Anzahl Schraubenlöcher
-    const dBoltHole = parseFloat(params.boltHoleDia || 18.0); // Schraubenlochdurchmesser
+    const dFlange = parseFloat(params.flangeDia || 165.0); // Flange outer diameter
+    const tFlange = parseFloat(params.flangeThick || 18.0); // Flange thickness
+    const dPipeOut = parseFloat(params.pipeOutDia || 76.1); // Pipe neck outer diameter (e.g., DN65)
+    const dPipeIn = parseFloat(params.pipeInDia || 60.0);  // Pipe inner bore
+    const hNeck = parseFloat(params.neckHeight || 35.0);   // Neck height
+    const dBoltCircle = parseFloat(params.boltCircleDia || 125.0); // Bolt circle diameter
+    const numBolts = parseInt(params.numBolts || 4);       // Number of bolt holes
+    const dBoltHole = parseFloat(params.boltHoleDia || 18.0); // Bolt hole diameter
     const hasRaisedFace = params.hasRaisedFace !== false;
     const dRaisedFace = parseFloat(params.raisedFaceDia || 110.0);
     const hRaisedFace = parseFloat(params.raisedFaceHeight || 3.0);
@@ -169,7 +169,7 @@ const ParametricParts = {
 
     const geoms = [discGeom];
 
-    // Welding Neck (Rohransatz)
+    // Welding Neck
     if (hNeck > 0 && dPipeOut > dPipeIn) {
       const neckShape = new THREE.Shape();
       neckShape.absarc(0, 0, dPipeOut / 2, 0, Math.PI * 2, false);
@@ -189,7 +189,7 @@ const ParametricParts = {
       geoms.push(neckGeom);
     }
 
-    // Raised Face (Dichtleiste auf Unterseite)
+    // Raised Face (on underside)
     if (hasRaisedFace && hRaisedFace > 0 && dRaisedFace > dPipeIn) {
       const rfShape = new THREE.Shape();
       rfShape.absarc(0, 0, Math.min(dRaisedFace / 2, rBC - rBolt - 2), 0, Math.PI * 2, false);
@@ -212,16 +212,16 @@ const ParametricParts = {
   },
 
   /**
-   * 3. Electronics Enclosure (Parametrisches Gehäuse mit Wandstärke, Eckenradien & Schraubendomen)
+   * 3. Electronics Enclosure (Parametric enclosure with wall thickness, corner radii & screw bosses)
    */
   generateEnclosure(params) {
-    const l = parseFloat(params.length || 140.0); // Länge (X)
-    const w = parseFloat(params.width || 90.0);   // Breite (Y)
-    const h = parseFloat(params.height || 45.0);  // Höhe (Z)
-    const wall = parseFloat(params.wallThickness || 3.0); // Wandstärke
-    const rOut = parseFloat(params.cornerRadius || 8.0);  // Eckenradius
-    const bossDia = parseFloat(params.bossDiameter || 10.0); // Schraubendome Durchmesser
-    const bossHole = parseFloat(params.bossHoleDia || 3.2); // Kernloch M3
+    const l = parseFloat(params.length || 140.0); // Length (X)
+    const w = parseFloat(params.width || 90.0);   // Width (Y)
+    const h = parseFloat(params.height || 45.0);  // Height (Z)
+    const wall = parseFloat(params.wallThickness || 3.0); // Wall thickness
+    const rOut = parseFloat(params.cornerRadius || 8.0);  // Corner radius
+    const bossDia = parseFloat(params.bossDiameter || 10.0); // Screw boss diameter
+    const bossHole = parseFloat(params.bossHoleDia || 3.2); // M3 pilot hole
 
     const rIn = Math.max(1.0, rOut - wall);
 
@@ -256,7 +256,7 @@ const ParametricParts = {
 
     const geoms = [bodyGeom, bottomGeom];
 
-    // 4 Corner Screw Bosses (Schraubendome für Deckelbefestigung)
+    // 4 Corner Screw Bosses (for lid fastening)
     const offsetBossX = l / 2 - wall - bossDia / 2 - 2;
     const offsetBossY = w / 2 - wall - bossDia / 2 - 2;
     const bossPositions = [
@@ -288,7 +288,7 @@ const ParametricParts = {
   },
 
   /**
-   * 4. Stepped Shaft (Mehrstufige Welle mit Absätzen & Fasen)
+   * 4. Stepped Shaft (Multi-stepped shaft with shoulders & chamfers)
    */
   generateSteppedShaft(params) {
     const d1 = parseFloat(params.dia1 || 25.0);
@@ -300,7 +300,7 @@ const ParametricParts = {
     const d4 = parseFloat(params.dia4 || 35.0);
     const l4 = parseFloat(params.len4 || 45.0);
     const chamfer = parseFloat(params.chamfer || 1.5);
-    const centerBore = parseFloat(params.centerBore || 6.0); // Zentrierbohrung DIN 332
+    const centerBore = parseFloat(params.centerBore || 6.0); // Center hole per DIN 332
 
     const r1 = d1 / 2;
     const r2 = d2 / 2;
@@ -360,15 +360,15 @@ const ParametricParts = {
   },
 
   /**
-   * 5. Hex Bolt & Nut (DIN 933 Sechskantschraube & Mutter)
+   * 5. Hex Bolt & Nut (DIN 933 Hex Bolt & Nut)
    */
   generateHexBolt(params) {
     const d = parseFloat(params.dia || 12.0); // M12
     const lShaft = parseFloat(params.length || 55.0);
-    const sHex = parseFloat(params.headWidth || 19.0); // Schlüsselweite SW19
+    const sHex = parseFloat(params.headWidth || 19.0); // Width across flats (19 mm)
     const kHead = parseFloat(params.headHeight || 7.5);
     const hasNut = params.hasNut !== false;
-    const nutPos = parseFloat(params.nutPosition || 35.0); // Position der Mutter entlang Schaft
+    const nutPos = parseFloat(params.nutPosition || 35.0); // Nut position along shaft
 
     const rShaft = d / 2;
     const rHex = sHex / Math.sqrt(3); // Radius to hexagon corners
@@ -402,7 +402,7 @@ const ParametricParts = {
 
     // 3. Hex Nut (Optional)
     if (hasNut) {
-      const mNut = kHead * 0.85; // Mutterhöhe
+      const mNut = kHead * 0.85; // Nut height
       const nutShape = new THREE.Shape();
       for (let i = 0; i < 6; i++) {
         const a = (i * Math.PI) / 3;

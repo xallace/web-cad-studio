@@ -37,37 +37,37 @@ class CADEngine {
         color: 0xc8cdd8,
         metalness: 0.85,
         roughness: 0.28,
-        name: 'Werkzeugstahl (Tool Steel)'
+        name: 'Tool Steel'
       }),
       aluminum: new THREE.MeshStandardMaterial({
         color: 0x98b8d8,
         metalness: 0.65,
         roughness: 0.35,
-        name: 'Aluminium eloxiert'
+        name: 'Anodized Aluminum'
       }),
       brass: new THREE.MeshStandardMaterial({
         color: 0xd4af37,
         metalness: 0.88,
         roughness: 0.3,
-        name: 'Messing poliert'
+        name: 'Polished Brass'
       }),
       plastic_orange: new THREE.MeshStandardMaterial({
         color: 0xff6600,
         metalness: 0.05,
         roughness: 0.45,
-        name: 'Technischer Kunststoff (PLA Orange)'
+        name: 'Engineering Plastic (PLA Orange)'
       }),
       plastic_white: new THREE.MeshStandardMaterial({
         color: 0xf0f2f5,
         metalness: 0.05,
         roughness: 0.35,
-        name: 'Polymer (POM Weiß)'
+        name: 'Polymer (POM White)'
       }),
       cast_iron: new THREE.MeshStandardMaterial({
         color: 0x3e4249,
         metalness: 0.7,
         roughness: 0.65,
-        name: 'Gusseisen'
+        name: 'Gray Cast Iron'
       })
     };
 
