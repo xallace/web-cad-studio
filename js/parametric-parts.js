@@ -822,6 +822,202 @@ const ParametricParts = {
   },
 
   /**
+   * Standard DIN ISO 14 (1986-12) Straight-Sided Spline Profiles (Light & Medium Series)
+   * Key format: 'L-NxDx...' (Leichte Reihe) and 'M-NxDx...' (Mittlere Reihe)
+   */
+  DIN_ISO_14_PRESETS: (() => {
+    const raw = [
+      // Light Series (Leichte Reihe)
+      ['L', 6,  23,  26,  6],
+      ['L', 6,  26,  30,  6],
+      ['L', 6,  28,  32,  7],
+      ['L', 8,  32,  36,  6],
+      ['L', 8,  36,  40,  7],
+      ['L', 8,  42,  46,  8],
+      ['L', 8,  46,  50,  9],
+      ['L', 8,  52,  58, 10],
+      ['L', 8,  56,  62, 10],
+      ['L', 8,  62,  68, 12],
+      ['L', 10, 72,  78, 12],
+      ['L', 10, 82,  88, 12],
+      ['L', 10, 92,  98, 14],
+      ['L', 10, 102, 108, 16],
+      ['L', 10, 112, 120, 18],
+      // Medium Series (Mittlere Reihe)
+      ['M', 6,  11,  14,  3],
+      ['M', 6,  13,  16,  3.5],
+      ['M', 6,  16,  20,  4],
+      ['M', 6,  18,  22,  5],
+      ['M', 6,  21,  25,  5],
+      ['M', 6,  23,  28,  6],
+      ['M', 6,  26,  32,  6],
+      ['M', 6,  28,  34,  7],
+      ['M', 8,  32,  38,  6],
+      ['M', 8,  36,  42,  7],
+      ['M', 8,  42,  48,  8],
+      ['M', 8,  46,  54,  9],
+      ['M', 8,  52,  60, 10],
+      ['M', 8,  56,  65, 10],
+      ['M', 8,  62,  72, 12],
+      ['M', 10, 72,  82, 12],
+      ['M', 10, 82,  92, 12],
+      ['M', 10, 92,  102, 14],
+      ['M', 10, 102, 112, 16],
+      ['M', 10, 112, 125, 18]
+    ];
+    const map = {};
+    for (const [series, N, d, D, B] of raw) {
+      const key = `${series}-${N}x${d}x${D}`;
+      const hubOuterDia = Math.min(220, Math.max(D + 8, Math.round((D * 1.65) / 2) * 2));
+      const shaftLength = Math.min(240, Math.max(45, Math.round((D * 3.0) / 5) * 5));
+      const hubLength = Math.min(140, Math.max(18, Math.round((D * 1.35) / 2) * 2));
+      const hubOffset = -Math.round((shaftLength * 0.2) / 2) * 2;
+      map[key] = {
+        series,
+        numSplines: N,
+        minorDia: d,
+        majorDia: D,
+        splineWidth: B,
+        hubOuterDia,
+        shaftLength,
+        hubLength,
+        hubOffset
+      };
+    }
+    return map;
+  })(),
+
+  /**
+   * Helper: Build exact 2D straight-sided parallel-flank spline loop (DIN ISO 14)
+   * Key 0 points to +Y (12 o'clock) with horizontal width B. Returns CCW Vector2 array.
+   */
+  _buildStraightSplineLoop(N, rMinor, rMajor, widthB, arcSteps = 6) {
+    const pitchAngle = (Math.PI * 2.0) / N;
+    const maxSafeHalfW = Math.min(
+      rMinor * Math.sin((pitchAngle * 0.5) * 0.88),
+      rMajor * 0.88
+    );
+    const halfW = Math.max(0.4, Math.min(widthB / 2.0, maxSafeHalfW));
+    const alphaMinor = Math.asin(Math.min(0.98, halfW / rMinor));
+    const alphaMajor = Math.asin(Math.min(0.98, halfW / rMajor));
+
+    const pts = [];
+    const baseAngle = Math.PI / 2.0; // Key 0 straight up (12 o'clock)
+
+    for (let k = 0; k < N; k++) {
+      const center = baseAngle + k * pitchAngle;
+      const nextCenter = baseAngle + (k + 1) * pitchAngle;
+
+      // 1. Right flank base on minor centering circle (rMinor)
+      const aBaseRight = center - alphaMinor;
+      pts.push(new THREE.Vector2(rMinor * Math.cos(aBaseRight), rMinor * Math.sin(aBaseRight)));
+
+      // 2. Straight parallel flank outward -> Major tip arc (CCW)
+      const aTipStart = center - alphaMajor;
+      const aTipEnd = center + alphaMajor;
+      for (let s = 0; s <= arcSteps; s++) {
+        const ang = aTipStart + (aTipEnd - aTipStart) * (s / arcSteps);
+        pts.push(new THREE.Vector2(rMajor * Math.cos(ang), rMajor * Math.sin(ang)));
+      }
+
+      // 3. Straight parallel flank inward -> Minor root arc to next key (CCW)
+      const aRootStart = center + alphaMinor;
+      const aRootEnd = nextCenter - alphaMinor;
+      for (let s = 0; s < arcSteps; s++) {
+        const ang = aRootStart + (aRootEnd - aRootStart) * (s / arcSteps);
+        pts.push(new THREE.Vector2(rMinor * Math.cos(ang), rMinor * Math.sin(ang)));
+      }
+    }
+    return pts;
+  },
+
+  /**
+   * 7. Straight-Sided Spline Connection with Minor-Diameter Centering (DIN ISO 14)
+   * Supports standalone Spline Shaft (Welle), Spline Hub (Nabe), or mated Shaft + Hub Assembly.
+   */
+  generateSplineConnection(params) {
+    const mode = params.componentMode || 'assembly';
+    const fitClass = params.fitClass || 'clearance';
+    const N = this._clamp(Math.round(this._num(params.numSplines, 6)), 4, 16);
+    const dMinor = this._clamp(this._num(params.minorDia, 23.0), 8.0, 140.0);
+    const dMajor = this._clamp(this._num(params.majorDia, 26.0), dMinor + 1.5, 160.0);
+    const widthB = this._clamp(this._num(params.splineWidth, 6.0), 2.0, 30.0);
+    const shaftLen = this._clamp(this._num(params.shaftLength, 80.0), 15.0, 300.0);
+    const hubOutDia = this._clamp(this._num(params.hubOuterDia, 44.0), dMajor + 4.0, 260.0);
+    const hubLen = this._clamp(this._num(params.hubLength, 36.0), 8.0, 200.0);
+    const rawHubOffset = this._num(params.hubOffset, -16.0);
+
+    const rMinor = dMinor / 2.0;
+    const rMajor = dMajor / 2.0;
+    const rHubOut = hubOutDia / 2.0;
+
+    // Orient extruded geometry (+Z depth, +Y key 0) to X-axis length, +Y width B, +Z key 0 (12 o'clock)
+    const orientAlongX = (geom, xStart) => {
+      geom.rotateX(Math.PI / 2);
+      geom.rotateZ(Math.PI / 2);
+      geom.translate(xStart, 0, 0);
+      return geom;
+    };
+
+    const geoms = [];
+
+    // 1. Spline Shaft (Welle)
+    if (mode === 'shaft' || mode === 'assembly') {
+      const shaftLoop = this._buildStraightSplineLoop(N, rMinor, rMajor, widthB, 6);
+      const shaftShape = new THREE.Shape(shaftLoop);
+      shaftShape.closePath();
+
+      const shaftGeom = new THREE.ExtrudeGeometry(shaftShape, {
+        depth: shaftLen,
+        bevelEnabled: false,
+        steps: 1
+      });
+      orientAlongX(shaftGeom, -shaftLen / 2.0);
+      geoms.push(shaftGeom);
+    }
+
+    // 2. Spline Hub (Nabe) with realistic DIN ISO 14 Innenzentrierung radial & flank clearances
+    if (mode === 'hub' || mode === 'assembly') {
+      // Minor-diameter centering: tight clearance on d (H7/f7..h7), generous radial clearance on D (H10/a11)
+      const clrMinorR = fitClass === 'clearance' ? 0.05 : (fitClass === 'transition' ? 0.03 : 0.02);
+      const clrMajorR = Math.max(0.18, (rMajor - rMinor) * 0.12);
+      const clrFlankB = fitClass === 'clearance' ? 0.10 : (fitClass === 'transition' ? 0.06 : 0.03);
+
+      const rHubMinor = rMinor + clrMinorR;
+      const rHubMajor = Math.min(rHubOut - 1.5, rMajor + clrMajorR);
+      const hubB = widthB + clrFlankB;
+
+      const hubShape = new THREE.Shape();
+      hubShape.absarc(0, 0, rHubOut, 0, Math.PI * 2.0, false);
+
+      const boreLoopCW = this._buildStraightSplineLoop(N, rHubMinor, rHubMajor, hubB, 6).reverse();
+      const borePath = new THREE.Path(boreLoopCW);
+      borePath.closePath();
+      hubShape.holes.push(borePath);
+
+      const hubGeom = new THREE.ExtrudeGeometry(hubShape, {
+        depth: hubLen,
+        bevelEnabled: false,
+        steps: 1,
+        curveSegments: 64
+      });
+
+      let xHubStart = -hubLen / 2.0;
+      if (mode === 'assembly') {
+        const maxShift = Math.max(0.0, (shaftLen - hubLen) / 2.0);
+        const clampedCenter = this._clamp(rawHubOffset, -maxShift, maxShift);
+        xHubStart = clampedCenter - hubLen / 2.0;
+      }
+      orientAlongX(hubGeom, xHubStart);
+      geoms.push(hubGeom);
+    }
+
+    const merged = geoms.length === 1 ? geoms[0] : this._mergeBufferGeometries(geoms);
+    merged.computeVertexNormals();
+    return merged;
+  },
+
+  /**
    * Helper: Build a LatheGeometry with crisp normals across sharp (>25 deg) profile corners
    */
   _buildLatheWithSharpEdges(profile, segments = 48) {

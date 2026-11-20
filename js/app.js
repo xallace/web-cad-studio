@@ -149,6 +149,93 @@ const PART_SCHEMAS = {
         { label: 'Cylindrical Pilot Length', value: `${pilotLen.toFixed(2)} mm` }
       ];
     }
+  },
+  splineConnection: {
+    name: 'Spline Shaft & Hub (DIN ISO 14)',
+    icon: '✳️',
+    description: 'Straight-sided splines with minor-Ø centering',
+    generator: (p) => ParametricParts.generateSplineConnection(p),
+    presets: ParametricParts.DIN_ISO_14_PRESETS,
+    presetParamId: 'profilePreset',
+    presetLinkedParams: ['numSplines', 'minorDia', 'majorDia', 'splineWidth'],
+    params: [
+      {
+        id: 'componentMode',
+        label: 'Component View',
+        type: 'select',
+        default: 'assembly',
+        refitOnChange: true,
+        options: [
+          { value: 'assembly', label: 'Shaft + Hub Assembly' },
+          { value: 'shaft', label: 'Spline Shaft (Welle)' },
+          { value: 'hub', label: 'Spline Hub (Nabe)' }
+        ]
+      },
+      {
+        id: 'profilePreset',
+        label: 'DIN ISO 14 Profile (N × d × D)',
+        type: 'select',
+        default: 'L-6x23x26',
+        groups: [
+          {
+            label: 'Light Series (Leichte Reihe)',
+            options: Object.entries(ParametricParts.DIN_ISO_14_PRESETS)
+              .filter(([, v]) => v.series === 'L')
+              .map(([k, v]) => ({ value: k, label: `${v.numSplines} × ${v.minorDia} × ${v.majorDia}  (B = ${v.splineWidth} mm)` }))
+          },
+          {
+            label: 'Medium Series (Mittlere Reihe)',
+            options: Object.entries(ParametricParts.DIN_ISO_14_PRESETS)
+              .filter(([, v]) => v.series === 'M')
+              .map(([k, v]) => ({ value: k, label: `${v.numSplines} × ${v.minorDia} × ${v.majorDia}  (B = ${v.splineWidth} mm)` }))
+          },
+          {
+            label: 'Custom',
+            options: [{ value: 'custom', label: 'Custom Dimensions' }]
+          }
+        ]
+      },
+      {
+        id: 'fitClass',
+        label: 'Shaft Fit (Innenzentrierung)',
+        type: 'select',
+        default: 'clearance',
+        options: [
+          { value: 'clearance', label: 'Clearance (B: d10 · D: a11 · d: f7)' },
+          { value: 'transition', label: 'Transition (B: f9 · D: a11 · d: g7)' },
+          { value: 'interference', label: 'Interference (B: h10 · D: a11 · d: h7)' }
+        ]
+      },
+      { id: 'numSplines', label: 'Number of Splines (N)', min: 4, max: 16, step: 2, default: 6, unit: '' },
+      { id: 'minorDia', label: 'Minor Centering Ø (d)', min: 10, max: 120, step: 1, default: 23, unit: 'mm' },
+      { id: 'majorDia', label: 'Major Outer Ø (D)', min: 13, max: 140, step: 1, default: 26, unit: 'mm' },
+      { id: 'splineWidth', label: 'Spline Width (B)', min: 2.5, max: 24, step: 0.5, default: 6, unit: 'mm' },
+      { id: 'shaftLength', label: 'Shaft Length (L)', min: 20, max: 250, step: 5, default: 80, unit: 'mm', enabledWhen: (p) => p.componentMode !== 'hub' },
+      { id: 'hubOuterDia', label: 'Hub Outer Ø (D_N)', min: 20, max: 220, step: 1, default: 44, unit: 'mm', enabledWhen: (p) => p.componentMode !== 'shaft' },
+      { id: 'hubLength', label: 'Hub Length (L_N)', min: 10, max: 150, step: 2, default: 36, unit: 'mm', enabledWhen: (p) => p.componentMode !== 'shaft' },
+      { id: 'hubOffset', label: 'Hub Axial Position', min: -100, max: 100, step: 2, default: -16, unit: 'mm', enabledWhen: (p) => p.componentMode === 'assembly' }
+    ],
+    getSpecExtras: (p) => {
+      const modeLabel = p.componentMode === 'shaft'
+        ? 'Welle'
+        : (p.componentMode === 'hub' ? 'Nabe' : 'Welle & Nabe');
+      const preset = ParametricParts.DIN_ISO_14_PRESETS[p.profilePreset];
+      const seriesLabel = preset
+        ? (preset.series === 'L' ? 'Light Series (Leichte Reihe)' : 'Medium Series (Mittlere Reihe)')
+        : 'Custom Profile';
+      const shaftTolMap = {
+        clearance: 'B: d10 · D: a11 · d: f7 (Clearance)',
+        transition: 'B: f9 · D: a11 · d: g7 (Transition)',
+        interference: 'B: h10 · D: a11 · d: h7 (Interference)'
+      };
+      return [
+        { label: 'DIN ISO 14 Designation', value: `${modeLabel} ISO 14 – ${p.numSplines} × ${p.minorDia} × ${p.majorDia}` },
+        { label: 'DIN Series', value: seriesLabel },
+        { label: 'Centering Method', value: 'Minor-Diameter Centering (Innenzentrierung on d)' },
+        { label: 'Hub Tolerances (DIN ISO 14)', value: 'B: H9 (H11 HT) · D: H10 · d: H7' },
+        { label: 'Shaft Tolerances', value: shaftTolMap[p.fitClass] || shaftTolMap.clearance }
+      ];
+    }
   }
 };
 
@@ -377,15 +464,20 @@ class AppController {
     schema.params.forEach(p => {
       const row = document.createElement('div');
       row.className = 'param-row';
-      if (p.dependsOn) {
-        dependentRows.push({ row, dependsOn: p.dependsOn });
+      if (p.dependsOn || p.enabledWhen) {
+        dependentRows.push({ row, dependsOn: p.dependsOn, enabledWhen: p.enabledWhen });
       }
 
       if (p.type === 'select') {
-        const optionsHtml = (p.options || []).map(opt => {
+        const renderOpt = (opt) => {
           const selected = String(opt.value) === String(this.currentParams[p.id]) ? 'selected' : '';
           return `<option value="${this._escapeHtml(opt.value)}" ${selected}>${this._escapeHtml(opt.label)}</option>`;
-        }).join('');
+        };
+        const optionsHtml = p.groups
+          ? p.groups.map(grp =>
+              `<optgroup label="${this._escapeHtml(grp.label)}">${(grp.options || []).map(renderOpt).join('')}</optgroup>`
+            ).join('')
+          : (p.options || []).map(renderOpt).join('');
 
         row.innerHTML = `
           <div class="param-label-row">
@@ -401,7 +493,7 @@ class AppController {
         sel.onchange = (e) => {
           const val = e.target.value;
           this.currentParams[p.id] = val;
-          const preset = schema.presets && schema.presets[val];
+          const preset = schema.presetParamId === p.id && schema.presets ? schema.presets[val] : null;
           if (preset) {
             Object.entries(preset).forEach(([k, v]) => {
               if (k in this.currentParams) {
@@ -412,7 +504,8 @@ class AppController {
             this._updateDependentStates(dependentRows);
             this.regeneratePart(true);
           } else {
-            this.regeneratePart(false);
+            this._updateDependentStates(dependentRows);
+            this.regeneratePart(Boolean(p.refitOnChange));
           }
         };
       } else if (p.type === 'checkbox') {
@@ -470,7 +563,8 @@ class AppController {
           this.currentParams[p.id] = clamped;
 
           // If user edits a preset-controlled dimension, switch preset selector to 'custom'
-          if (schema.presetParamId && presetSelectEl && this.currentParams[schema.presetParamId] !== 'custom') {
+          const isLinkedToPreset = !schema.presetLinkedParams || schema.presetLinkedParams.includes(p.id);
+          if (schema.presetParamId && isLinkedToPreset && presetSelectEl && this.currentParams[schema.presetParamId] !== 'custom') {
             this.currentParams[schema.presetParamId] = 'custom';
             presetSelectEl.value = 'custom';
           }
@@ -490,10 +584,12 @@ class AppController {
   }
 
   _updateDependentStates(dependentRows) {
-    dependentRows.forEach(({ row, dependsOn }) => {
-      const enabled = Boolean(this.currentParams[dependsOn]);
+    dependentRows.forEach(({ row, dependsOn, enabledWhen }) => {
+      const enabled = typeof enabledWhen === 'function'
+        ? Boolean(enabledWhen(this.currentParams))
+        : Boolean(this.currentParams[dependsOn]);
       row.classList.toggle('disabled', !enabled);
-      row.querySelectorAll('input').forEach(inp => {
+      row.querySelectorAll('input, select').forEach(inp => {
         inp.disabled = !enabled;
       });
     });
@@ -667,10 +763,14 @@ class AppController {
 
       schema.params.forEach(p => {
         if (p.dependsOn && !this.currentParams[p.dependsOn]) return;
+        if (typeof p.enabledWhen === 'function' && !p.enabledWhen(this.currentParams)) return;
         const val = this.currentParams[p.id];
         let formattedVal = '';
         if (p.type === 'select') {
-          const matchedOpt = (p.options || []).find(o => String(o.value) === String(val));
+          const allOpts = p.groups
+            ? p.groups.flatMap(g => g.options || [])
+            : (p.options || []);
+          const matchedOpt = allOpts.find(o => String(o.value) === String(val));
           formattedVal = matchedOpt ? matchedOpt.label : String(val);
         } else if (typeof p.formatValue === 'function') {
           formattedVal = p.formatValue(val);

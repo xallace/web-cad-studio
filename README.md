@@ -24,6 +24,9 @@ A modern, browser-based 3D CAD tool for interactive parameterization, inspection
 * **🔧 Steep Taper Shank Form A (DIN 2080-1):**
   * Standard presets for **SK 30, SK 40, SK 50, SK 60, SK 70, and SK 80** plus full custom parameterization.
   * Exact **7:24 steep taper** ($\alpha/2 = 8.297^\circ$), cylindrical pilot ($d_2$ a10), concave internal drawbar thread bore ($d_3$, M12–M48) with $118^\circ$ drill point, gauge-plane offset ($a$), and drive flange ($d_4$) with two opposing drive key slots ($b$ H12).
+* **✳️ Spline Shaft & Hub (DIN ISO 14):**
+  * Complete **DIN ISO 14 (1986-12)** straight-sided parallel-flank spline library covering all **35 standard sizes** across the **Light Series** ($6\times 23\times 26$ to $10\times 112\times 120$) and **Medium Series** ($6\times 11\times 14$ to $10\times 112\times 125$).
+  * Switchable **Shaft + Hub Assembly**, standalone **Spline Shaft (Welle)**, or standalone **Spline Hub (Nabe)** with minor-diameter centering (*Innenzentrierung*), configurable hub axial offset, and DIN ISO 14 fit tolerance classes (`f7/g7/h7`, `d10/f9/h10`, `a11`).
 
 ### 2. CAD Inspection & Analysis
 * **✂️ Dynamic Section Plane (Clipping Plane):**
