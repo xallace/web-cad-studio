@@ -98,6 +98,57 @@ const PART_SCHEMAS = {
       { id: 'hasNut', label: 'Show Hex Nut', type: 'checkbox', default: true },
       { id: 'nutPosition', label: 'Nut Position Along Shank', min: 2, max: 140, step: 2, default: 35, unit: 'mm', dependsOn: 'hasNut' }
     ]
+  },
+  steepTaper: {
+    name: 'Steep Taper Shank (DIN 2080)',
+    icon: '🔧',
+    description: 'DIN 2080-1 Form A (7:24) tool shank, SK 30–80',
+    generator: (p) => ParametricParts.generateSteepTaperShank(p),
+    presets: ParametricParts.DIN_2080_FORM_A_PRESETS,
+    presetParamId: 'sizeNr',
+    params: [
+      {
+        id: 'sizeNr',
+        label: 'DIN 2080-1 Size (Nr.)',
+        type: 'select',
+        default: '40',
+        options: [
+          { value: '30', label: 'SK 30 (DIN 2080 – A 30)' },
+          { value: '40', label: 'SK 40 (DIN 2080 – A 40)' },
+          { value: '50', label: 'SK 50 (DIN 2080 – A 50)' },
+          { value: '60', label: 'SK 60 (DIN 2080 – A 60)' },
+          { value: '70', label: 'SK 70 (DIN 2080 – A 70)' },
+          { value: '80', label: 'SK 80 (DIN 2080 – A 80)' },
+          { value: 'custom', label: 'Custom Dimensions' }
+        ]
+      },
+      { id: 'd1', label: 'Taper Gauge Ø (d₁)', min: 20, max: 260, step: 0.05, default: 44.45, unit: 'mm' },
+      { id: 'd2', label: 'Pilot Ø (d₂ a10)', min: 10, max: 160, step: 0.1, default: 25.3, unit: 'mm' },
+      { id: 'd3', label: 'Drawbar Thread (d₃)', min: 0, max: 52, step: 1, default: 16, formatValue: (v) => (v > 0 ? `M${v}` : 'None') },
+      { id: 'd4', label: 'Flange Ø (d₄)', min: 35, max: 360, step: 0.5, default: 63.0, unit: 'mm' },
+      { id: 'l1', label: 'Shank Length (l₁)', min: 40, max: 480, step: 0.2, default: 93.4, unit: 'mm' },
+      { id: 'a', label: 'Gauge Offset (a)', min: 0.5, max: 12.0, step: 0.1, default: 1.6, unit: 'mm' },
+      { id: 'b', label: 'Drive Slot Width (b H12)', min: 6.0, max: 50.0, step: 0.1, default: 16.1, unit: 'mm' },
+      { id: 'flangeThick', label: 'Flange Thickness', min: 6.0, max: 60.0, step: 0.5, default: 14.0, unit: 'mm' },
+      { id: 'threadDepth', label: 'Thread Bore Depth', min: 0, max: 140, step: 1, default: 32, unit: 'mm' }
+    ],
+    getSpecExtras: (p) => {
+      const d1 = Number(p.d1) || 44.45;
+      const d2 = Number(p.d2) || 25.3;
+      const l1 = Number(p.l1) || 93.4;
+      const taperLen = Math.min(l1, Math.max(0, (d1 - d2) * (24 / 7)));
+      const pilotLen = Math.max(0, l1 - taperLen);
+      const halfAngleDeg = (Math.atan(7 / 48) * 180) / Math.PI;
+      const designation = p.sizeNr && p.sizeNr !== 'custom'
+        ? `Steilkegelschaft DIN 2080 – A ${p.sizeNr} AT4`
+        : 'Steilkegelschaft DIN 2080 – A (Custom)';
+      return [
+        { label: 'DIN Designation', value: designation },
+        { label: 'Steep Taper Ratio', value: `7:24 (α/2 = ${halfAngleDeg.toFixed(3)}°)` },
+        { label: 'Effective Taper Length', value: `${taperLen.toFixed(2)} mm` },
+        { label: 'Cylindrical Pilot Length', value: `${pilotLen.toFixed(2)} mm` }
+      ];
+    }
   }
 };
 
@@ -314,6 +365,14 @@ class AppController {
     group.innerHTML = `<div class="param-group-title">${schema.name} Parameters</div>`;
 
     const dependentRows = [];
+    const controlSyncMap = {};
+    let presetSelectEl = null;
+
+    const formatParamVal = (p, val) => {
+      if (typeof p.formatValue === 'function') return p.formatValue(val);
+      const unitSuffix = p.unit ? ` ${p.unit}` : '';
+      return `${val}${unitSuffix}`;
+    };
 
     schema.params.forEach(p => {
       const row = document.createElement('div');
@@ -322,31 +381,66 @@ class AppController {
         dependentRows.push({ row, dependsOn: p.dependsOn });
       }
 
-      if (p.type === 'checkbox') {
+      if (p.type === 'select') {
+        const optionsHtml = (p.options || []).map(opt => {
+          const selected = String(opt.value) === String(this.currentParams[p.id]) ? 'selected' : '';
+          return `<option value="${this._escapeHtml(opt.value)}" ${selected}>${this._escapeHtml(opt.label)}</option>`;
+        }).join('');
+
+        row.innerHTML = `
+          <div class="param-label-row">
+            <label class="param-name" for="select-${p.id}">${p.label}</label>
+          </div>
+          <select class="cad-select" id="select-${p.id}">${optionsHtml}</select>
+        `;
+
+        const sel = row.querySelector(`#select-${p.id}`);
+        if (schema.presetParamId === p.id) {
+          presetSelectEl = sel;
+        }
+        sel.onchange = (e) => {
+          const val = e.target.value;
+          this.currentParams[p.id] = val;
+          const preset = schema.presets && schema.presets[val];
+          if (preset) {
+            Object.entries(preset).forEach(([k, v]) => {
+              if (k in this.currentParams) {
+                this.currentParams[k] = v;
+                if (controlSyncMap[k]) controlSyncMap[k](v);
+              }
+            });
+            this._updateDependentStates(dependentRows);
+            this.regeneratePart(true);
+          } else {
+            this.regeneratePart(false);
+          }
+        };
+      } else if (p.type === 'checkbox') {
         row.innerHTML = `
           <div class="param-label-row">
             <label class="param-name" for="input-${p.id}" style="cursor:pointer;">${p.label}</label>
-            <input type="checkbox" id="input-${p.id}" ${p.default ? 'checked' : ''} style="cursor:pointer;">
+            <input type="checkbox" id="input-${p.id}" ${this.currentParams[p.id] ? 'checked' : ''} style="cursor:pointer;">
           </div>
         `;
         const chk = row.querySelector(`#input-${p.id}`);
+        controlSyncMap[p.id] = (v) => { chk.checked = Boolean(v); };
         chk.onchange = (e) => {
           this.currentParams[p.id] = e.target.checked;
           this._updateDependentStates(dependentRows);
           this.regeneratePart();
         };
       } else {
-        const unitSuffix = p.unit ? ` ${p.unit}` : '';
+        const initVal = this.currentParams[p.id];
         row.innerHTML = `
           <div class="param-label-row">
             <span class="param-name">${p.label}</span>
-            <span class="param-value" id="val-${p.id}">${p.default}${unitSuffix}</span>
+            <span class="param-value" id="val-${p.id}">${formatParamVal(p, initVal)}</span>
           </div>
           <div class="param-input-wrap">
             <input type="range" class="cad-slider" id="slider-${p.id}"
-                   min="${p.min}" max="${p.max}" step="${p.step}" value="${p.default}">
+                   min="${p.min}" max="${p.max}" step="${p.step}" value="${initVal}">
             <input type="number" class="cad-num-input" id="num-${p.id}"
-                   min="${p.min}" max="${p.max}" step="${p.step}" value="${p.default}">
+                   min="${p.min}" max="${p.max}" step="${p.step}" value="${initVal}">
           </div>
         `;
 
@@ -354,22 +448,33 @@ class AppController {
         const num = row.querySelector(`#num-${p.id}`);
         const display = row.querySelector(`#val-${p.id}`);
 
+        controlSyncMap[p.id] = (v) => {
+          slider.value = v;
+          num.value = v;
+          display.textContent = formatParamVal(p, v);
+        };
+
         const applyValue = (rawVal, clampAndSync = true) => {
           const parsed = parseFloat(rawVal);
           if (!Number.isFinite(parsed)) {
             if (clampAndSync) {
               const fallback = this.currentParams[p.id];
-              slider.value = fallback;
-              num.value = fallback;
-              display.textContent = `${fallback}${unitSuffix}`;
+              controlSyncMap[p.id](fallback);
             }
             return;
           }
           const clamped = clampAndSync ? Math.min(p.max, Math.max(p.min, parsed)) : parsed;
           slider.value = clamped;
           if (clampAndSync) num.value = clamped;
-          display.textContent = `${clamped}${unitSuffix}`;
+          display.textContent = formatParamVal(p, clamped);
           this.currentParams[p.id] = clamped;
+
+          // If user edits a preset-controlled dimension, switch preset selector to 'custom'
+          if (schema.presetParamId && presetSelectEl && this.currentParams[schema.presetParamId] !== 'custom') {
+            this.currentParams[schema.presetParamId] = 'custom';
+            presetSelectEl.value = 'custom';
+          }
+
           this.regeneratePart();
         };
 
@@ -550,13 +655,33 @@ class AppController {
       const schema = PART_SCHEMAS[this.currentPartKey];
       title = schema.name;
       let paramRows = '';
+
+      if (typeof schema.getSpecExtras === 'function') {
+        schema.getSpecExtras(this.currentParams).forEach(extra => {
+          paramRows += `<tr>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">${this._escapeHtml(extra.label)}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right; color:#00d2d3;">${this._escapeHtml(extra.value)}</td>
+          </tr>`;
+        });
+      }
+
       schema.params.forEach(p => {
         if (p.dependsOn && !this.currentParams[p.dependsOn]) return;
         const val = this.currentParams[p.id];
-        const formattedVal = typeof val === 'boolean' ? (val ? 'Yes' : 'No') : val;
+        let formattedVal = '';
+        if (p.type === 'select') {
+          const matchedOpt = (p.options || []).find(o => String(o.value) === String(val));
+          formattedVal = matchedOpt ? matchedOpt.label : String(val);
+        } else if (typeof p.formatValue === 'function') {
+          formattedVal = p.formatValue(val);
+        } else if (typeof val === 'boolean') {
+          formattedVal = val ? 'Yes' : 'No';
+        } else {
+          formattedVal = `${val}${p.unit ? ' ' + p.unit : ''}`;
+        }
         paramRows += `<tr>
-          <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">${p.label}</td>
-          <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${formattedVal} ${p.unit || ''}</td>
+          <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">${this._escapeHtml(p.label)}</td>
+          <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${this._escapeHtml(formattedVal)}</td>
         </tr>`;
       });
       detailsHtml = `

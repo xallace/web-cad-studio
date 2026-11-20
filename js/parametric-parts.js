@@ -568,6 +568,260 @@ const ParametricParts = {
   },
 
   /**
+   * Standard DIN 2080-1 (2011-11) Form A Steep Taper Shank Presets (7:24 Taper, SK 30 - SK 80)
+   */
+  DIN_2080_FORM_A_PRESETS: {
+    '30': { d1: 31.75,  d2: 17.4,  d3: 12, pitch: 1.75, d4: 50.0,  l1: 68.4,  a: 1.6, b: 16.1, flangeThick: 12.0, threadDepth: 24 },
+    '40': { d1: 44.45,  d2: 25.3,  d3: 16, pitch: 2.0,  d4: 63.0,  l1: 93.4,  a: 1.6, b: 16.1, flangeThick: 14.0, threadDepth: 32 },
+    '50': { d1: 69.85,  d2: 39.6,  d3: 24, pitch: 3.0,  d4: 97.5,  l1: 126.8, a: 3.2, b: 25.7, flangeThick: 18.0, threadDepth: 47 },
+    '60': { d1: 107.95, d2: 60.2,  d3: 30, pitch: 3.5,  d4: 156.0, l1: 206.8, a: 3.2, b: 25.7, flangeThick: 24.0, threadDepth: 65 },
+    '70': { d1: 165.1,  d2: 92.0,  d3: 36, pitch: 4.0,  d4: 230.0, l1: 296.0, a: 4.0, b: 32.4, flangeThick: 32.0, threadDepth: 80 },
+    '80': { d1: 254.0,  d2: 140.0, d3: 48, pitch: 5.0,  d4: 350.0, l1: 469.0, a: 6.0, b: 40.5, flangeThick: 44.0, threadDepth: 110 }
+  },
+
+  /**
+   * 6. Steep Taper Shank Form A (DIN 2080-1, 7:24 Taper, Cylindrical Pilot, Drawbar Bore & Drive Slots)
+   * Built as a watertight single-shell manifold with zero internal seam faces.
+   */
+  generateSteepTaperShank(params) {
+    const TAPER_RATIO = 7.0 / 24.0; // Exact 7:24 steep taper (Δd / Δx)
+    const radialSegs = 64;
+
+    const d1 = this._clamp(this._num(params.d1, 44.45), 16.0, 300.0);
+    const d2 = this._clamp(this._num(params.d2, 25.3), 8.0, d1 - 2.0);
+    const d3 = this._clamp(this._num(params.d3, 16.0), 0.0, d2 - 2.4);
+    const d4 = this._clamp(this._num(params.d4, 63.0), d1 + 6.0, 420.0);
+    const l1 = this._clamp(this._num(params.l1, 93.4), 25.0, 550.0);
+    const a = this._clamp(this._num(params.a, 1.6), 0.0, 20.0);
+    const b = this._clamp(this._num(params.b, 16.1), 4.0, d4 * 0.65);
+    const flangeThick = this._clamp(this._num(params.flangeThick, 14.0), 5.0, 80.0);
+    const rawThreadDepth = this._clamp(this._num(params.threadDepth, 32.0), 0.0, l1 * 0.75);
+
+    const r1 = d1 / 2.0;
+    const r2 = d2 / 2.0;
+    const r4 = d4 / 2.0;
+
+    // 7:24 taper length from gauge plane (d1) down to cylindrical pilot (d2)
+    const idealTaperLen = Math.max(0.0, (d1 - d2) / TAPER_RATIO);
+    let pilotLen = 0.0;
+    let rEnd = r2;
+    if (idealTaperLen < l1 - 0.5) {
+      pilotLen = l1 - idealTaperLen;
+      rEnd = r2;
+    } else {
+      pilotLen = 0.0;
+      rEnd = Math.max(2.0, r1 - l1 * (TAPER_RATIO / 2.0));
+    }
+
+    const cTip = Math.min(1.5, Math.max(0.5, rEnd * 0.08), pilotLen > 0.5 ? pilotLen * 0.35 : 1.5);
+
+    // ISO 68-1 metric coarse thread minor diameter for internal drawbar bore
+    const pitchTable = { 6: 1.0, 8: 1.25, 10: 1.5, 12: 1.75, 14: 2.0, 16: 2.0, 20: 2.5, 24: 3.0, 30: 3.5, 36: 4.0, 42: 4.5, 48: 5.0 };
+    const pitch = pitchTable[Math.round(d3)] || this._clamp(d3 * 0.115, 0.5, 6.0);
+    const maxSafeBoreR = Math.max(0.0, rEnd - cTip - 1.0);
+    const rawCoreR = d3 > 0 ? Math.max(1.0, (d3 - 1.08253 * pitch) / 2.0) : 0.0;
+    const rCore = (d3 >= 3.0 && rawThreadDepth >= 3.0 && maxSafeBoreR > 1.2)
+      ? Math.min(rawCoreR, maxSafeBoreR)
+      : 0.0;
+
+    const xFlangeStart = l1 + a;
+    const slotDepth = Math.min(flangeThick - 2.0, Math.max(2.5, flangeThick * 0.65));
+    const xSlotEnd = xFlangeStart + slotDepth;
+    const xTotalEnd = xFlangeStart + flangeThick;
+    const cRear = Math.min(1.2, (flangeThick - slotDepth) * 0.35, (r4 - r1) * 0.25);
+
+    // 1. Shank Body (x ∈ [0, l1 + a]): concave drawbar bore + pilot d2 + 7:24 taper + gauge offset a
+    // Left open at (r1, xFlangeStart) so it stitches cleanly to the flange shoulder with zero internal faces
+    const shankProfile = [];
+    if (rCore > 0) {
+      const drillTipDepth = rCore / Math.tan((59.0 * Math.PI) / 180.0); // 118-deg drill point
+      const maxBoreDepth = Math.max(2.0, l1 - drillTipDepth - 2.5);
+      const boreDepth = Math.min(rawThreadDepth, maxBoreDepth);
+      const rSink = Math.min(d3 / 2.0 + 0.4, rEnd - cTip - 0.4);
+      const cSink = Math.min(Math.max(0.4, rSink - rCore), boreDepth * 0.25);
+
+      shankProfile.push(new THREE.Vector2(0, boreDepth + drillTipDepth));
+      shankProfile.push(new THREE.Vector2(rCore, boreDepth));
+      if (rSink > rCore + 0.15 && cSink > 0.15) {
+        shankProfile.push(new THREE.Vector2(rCore, cSink));
+        shankProfile.push(new THREE.Vector2(rSink, 0));
+      } else {
+        shankProfile.push(new THREE.Vector2(rCore, 0));
+      }
+    } else {
+      shankProfile.push(new THREE.Vector2(0, 0));
+    }
+
+    if (cTip > 0.05) {
+      shankProfile.push(new THREE.Vector2(rEnd - cTip, 0));
+      shankProfile.push(new THREE.Vector2(rEnd, cTip));
+    } else {
+      shankProfile.push(new THREE.Vector2(rEnd, 0));
+    }
+
+    if (pilotLen > cTip + 0.2) {
+      shankProfile.push(new THREE.Vector2(r2, pilotLen));
+    }
+    shankProfile.push(new THREE.Vector2(r1, l1));
+    if (a > 0.05) {
+      shankProfile.push(new THREE.Vector2(r1, xFlangeStart));
+    }
+
+    const shankGeom = this._buildLatheWithSharpEdges(shankProfile, radialSegs);
+    shankGeom.rotateZ(-Math.PI / 2); // Map Lathe +Y to +X
+
+    // 2. Compute exact slotted drive flange 2D CCW contour in (u, v) plane
+    // Mapped to 3D via (X = xPlane, Y = -u, Z = v) so slots sit at +Z (top) & -Z (bottom) with width b along Y
+    const halfB = Math.min(b / 2.0, r4 * 0.72);
+    const vOuter = Math.sqrt(Math.max(1.0, r4 * r4 - halfB * halfB));
+    const minSlotFloor = r1 + Math.max(1.0, (vOuter - r1) * 0.22);
+    const rSlotFloor = Math.min(vOuter - 1.5, Math.max(r1 + 0.8, minSlotFloor));
+    const alpha = Math.asin(Math.min(0.98, halfB / r4));
+
+    const sampleArc = (startAngle, endAngle, radius) => {
+      const span = Math.abs(endAngle - startAngle);
+      const steps = Math.max(6, Math.round((span / (Math.PI * 2)) * radialSegs));
+      const pts = [];
+      for (let i = 0; i <= steps; i++) {
+        const ang = startAngle + (endAngle - startAngle) * (i / steps);
+        pts.push(new THREE.Vector2(radius * Math.cos(ang), radius * Math.sin(ang)));
+      }
+      return pts;
+    };
+
+    // Right circular arc: (-π/2 + alpha) -> (+π/2 - alpha)
+    const rightArc = sampleArc(-Math.PI / 2 + alpha, Math.PI / 2 - alpha, r4);
+    // Left circular arc: (+π/2 + alpha) -> (3π/2 - alpha)
+    const leftArc = sampleArc(Math.PI / 2 + alpha, (3 * Math.PI) / 2 - alpha, r4);
+
+    // Closed CCW slotted flange outer contour
+    const slottedLoop = [
+      ...rightArc,
+      new THREE.Vector2(halfB, rSlotFloor),
+      new THREE.Vector2(-halfB, rSlotFloor),
+      ...leftArc,
+      new THREE.Vector2(-halfB, -rSlotFloor),
+      new THREE.Vector2(halfB, -rSlotFloor)
+    ];
+
+    // Helper: Map a 2D (u, v) ShapeGeometry onto YZ plane at xCoord with normal pointing -X
+    const buildYZFaceNegX = (shape2d, xCoord) => {
+      const g = new THREE.ShapeGeometry(shape2d);
+      g.rotateX(Math.PI / 2);
+      g.rotateZ(-Math.PI / 2);
+      g.translate(xCoord, 0, 0);
+      g.computeVertexNormals();
+      return g;
+    };
+
+    // 2a. Left Flange Shoulder Face at x = xFlangeStart (slotted outer contour with r1 inner hole)
+    const leftFlangeShape = new THREE.Shape(slottedLoop);
+    leftFlangeShape.closePath();
+
+    // Inner hole matches LatheGeometry(radialSegs) exact vertex angles: u = r1*sin(phi), v = r1*cos(phi), CW
+    const holePts = [];
+    for (let i = 0; i < radialSegs; i++) {
+      const phi = (i / radialSegs) * Math.PI * 2;
+      holePts.push(new THREE.Vector2(r1 * Math.sin(phi), r1 * Math.cos(phi)));
+    }
+    const shankHole = new THREE.Path(holePts);
+    shankHole.closePath();
+    leftFlangeShape.holes.push(shankHole);
+
+    const leftFlangeFace = buildYZFaceNegX(leftFlangeShape, xFlangeStart);
+
+    // 2b. Slotted Flange Outer Perimeter Wall (x ∈ [xFlangeStart, xSlotEnd]) with sharp normals at slot corners
+    const wallPositions = [];
+    const wallNormals = [];
+    const nLoop = slottedLoop.length;
+
+    const pushWallQuad = (p0, p1, n0, n1) => {
+      const ax = xFlangeStart, ay = -p0.x, az = p0.y;
+      const bx = xFlangeStart, by = -p1.x, bz = p1.y;
+      const cx = xSlotEnd,     cy = -p1.x, cz = p1.y;
+      const dx = xSlotEnd,     dy = -p0.x, dz = p0.y;
+
+      // Triangle 1: A -> D -> C
+      wallPositions.push(ax, ay, az, dx, dy, dz, cx, cy, cz);
+      wallNormals.push(0, n0.y, n0.z, 0, n0.y, n0.z, 0, n1.y, n1.z);
+      // Triangle 2: A -> C -> B
+      wallPositions.push(ax, ay, az, cx, cy, cz, bx, by, bz);
+      wallNormals.push(0, n0.y, n0.z, 0, n1.y, n1.z, 0, n1.y, n1.z);
+    };
+
+    const isOnOuterCircle = (p) => Math.abs(p.length() - r4) < 1e-2;
+    for (let i = 0; i < nLoop; i++) {
+      const p0 = slottedLoop[i];
+      const p1 = slottedLoop[(i + 1) % nLoop];
+      if (p0.distanceToSquared(p1) < 1e-8) continue;
+
+      if (isOnOuterCircle(p0) && isOnOuterCircle(p1)) {
+        // Smooth radial normals on cylindrical rim arcs
+        const n0 = new THREE.Vector3(0, -p0.x, p0.y).normalize();
+        const n1 = new THREE.Vector3(0, -p1.x, p1.y).normalize();
+        pushWallQuad(p0, p1, n0, n1);
+      } else {
+        // Crisp flat normal for drive slot walls & slot floors
+        const du = p1.x - p0.x;
+        const dv = p1.y - p0.y;
+        const flatN = new THREE.Vector3(0, -dv, -du).normalize();
+        pushWallQuad(p0, p1, flatN, flatN);
+      }
+    }
+
+    const slottedWallGeom = new THREE.BufferGeometry();
+    slottedWallGeom.setAttribute('position', new THREE.Float32BufferAttribute(wallPositions, 3));
+    slottedWallGeom.setAttribute('normal', new THREE.Float32BufferAttribute(wallNormals, 3));
+
+    // 2c. Two Drive Slot Back-Wall Pockets at x = xSlotEnd (normal -X, closing slots against rear collar)
+    const topPocketArc = sampleArc(Math.PI / 2 - alpha, Math.PI / 2 + alpha, r4);
+    const topPocketShape = new THREE.Shape([
+      new THREE.Vector2(-halfB, rSlotFloor),
+      new THREE.Vector2(halfB, rSlotFloor),
+      ...topPocketArc
+    ]);
+    topPocketShape.closePath();
+    const topPocketFace = buildYZFaceNegX(topPocketShape, xSlotEnd);
+
+    const botPocketArc = sampleArc((3 * Math.PI) / 2 - alpha, (3 * Math.PI) / 2 + alpha, r4);
+    const botPocketShape = new THREE.Shape([
+      new THREE.Vector2(halfB, -rSlotFloor),
+      new THREE.Vector2(-halfB, -rSlotFloor),
+      ...botPocketArc
+    ]);
+    botPocketShape.closePath();
+    const botPocketFace = buildYZFaceNegX(botPocketShape, xSlotEnd);
+
+    // 3. Rear Solid Flange Collar (x ∈ [xSlotEnd, xTotalEnd]) with crisp rear edge chamfer
+    const rearProfile = [
+      new THREE.Vector2(r4, xSlotEnd)
+    ];
+    if (cRear > 0.05) {
+      rearProfile.push(new THREE.Vector2(r4, xTotalEnd - cRear));
+      rearProfile.push(new THREE.Vector2(r4 - cRear, xTotalEnd));
+    } else {
+      rearProfile.push(new THREE.Vector2(r4, xTotalEnd));
+    }
+    rearProfile.push(new THREE.Vector2(0, xTotalEnd));
+
+    const rearCollarGeom = this._buildLatheWithSharpEdges(rearProfile, radialSegs);
+    rearCollarGeom.rotateZ(-Math.PI / 2);
+
+    const merged = this._mergeBufferGeometries([
+      shankGeom,
+      leftFlangeFace,
+      slottedWallGeom,
+      topPocketFace,
+      botPocketFace,
+      rearCollarGeom
+    ]);
+    merged.translate(-xTotalEnd / 2.0, 0, 0);
+    // Orient pilot/drawbar bore (+X) and spindle-facing drive slots toward default Iso & Right CAD views
+    merged.rotateZ(Math.PI);
+    return merged;
+  },
+
+  /**
    * Helper: Build a LatheGeometry with crisp normals across sharp (>25 deg) profile corners
    */
   _buildLatheWithSharpEdges(profile, segments = 48) {

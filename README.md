@@ -21,6 +21,9 @@ A modern, browser-based 3D CAD tool for interactive parameterization, inspection
   * Lead-in chamfers, crisp machined shoulders, and 60° DIN 332 center holes.
 * **🔩 Hex Bolt & Nut (DIN 933):**
   * Thread diameter (M4–M30), chamfered shank length, width across flats, head height, and positionable hex nut.
+* **🔧 Steep Taper Shank Form A (DIN 2080-1):**
+  * Standard presets for **SK 30, SK 40, SK 50, SK 60, SK 70, and SK 80** plus full custom parameterization.
+  * Exact **7:24 steep taper** ($\alpha/2 = 8.297^\circ$), cylindrical pilot ($d_2$ a10), concave internal drawbar thread bore ($d_3$, M12–M48) with $118^\circ$ drill point, gauge-plane offset ($a$), and drive flange ($d_4$) with two opposing drive key slots ($b$ H12).
 
 ### 2. CAD Inspection & Analysis
 * **✂️ Dynamic Section Plane (Clipping Plane):**
