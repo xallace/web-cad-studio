@@ -72,9 +72,10 @@
           <!-- Dynamically populated from PART_SCHEMAS -->
         </div>
 
-        <div style="margin-top: 24px; padding: 12px; background: rgba(0, 136, 255, 0.05); border: 1px dashed rgba(0, 136, 255, 0.3); border-radius: 6px; font-size: 0.76rem; color: #8e95a5; line-height: 1.5; text-align: center;">
-          📁 <strong>Drag &amp; Drop</strong><br>
-          Drop a custom <code>.stl</code> file directly into the 3D viewport to measure &amp; section.
+        <div id="import-drop-zone" class="import-drop-zone" title="Click to browse or drag &amp; drop a 3D mesh file">
+          📁 <strong>Import STL / OBJ</strong><br>
+          Drop a custom <code>.stl</code> or <code>.obj</code> file here (or click to browse) to measure &amp; section.
+          <input type="file" id="file-import-input" accept=".stl,.obj" hidden>
         </div>
       </div>
     </aside>
@@ -97,14 +98,14 @@
 
       <!-- Interactive Section / Clipping Plane Slider Widget -->
       <div id="clipping-widget">
-        <span style="font-size: 0.82rem; font-weight: 600; color: #00d2d3;">✂️ Section Plane:</span>
-        <select id="clipping-axis" class="cad-select" style="width: auto; padding: 2px 8px; margin: 0;">
-          <option value="y">Y-Axis (Horizontal)</option>
+        <span style="font-size: 0.82rem; font-weight: 600; color: #00d2d3; white-space: nowrap;">✂️ Section Plane:</span>
+        <select id="clipping-axis" class="cad-select" style="width: auto; padding: 3px 8px; margin: 0;">
+          <option value="z">Z-Axis (Horizontal)</option>
           <option value="x">X-Axis (Transverse)</option>
-          <option value="z">Z-Axis (Longitudinal)</option>
+          <option value="y">Y-Axis (Longitudinal)</option>
         </select>
-        <input type="range" id="clipping-slider" class="cad-slider" min="-80" max="80" step="1" value="0" style="width: 140px;">
-        <span id="clipping-val-display" style="font-family: monospace; font-size: 0.8rem; color: #fff; width: 55px;">0 mm</span>
+        <input type="range" id="clipping-slider" class="cad-slider" min="-80" max="80" step="1" value="0" style="width: 150px;">
+        <span id="clipping-val-display">0 mm</span>
       </div>
     </section>
 
@@ -123,7 +124,7 @@
         <div class="metrics-card">
           <div class="param-group-title">Material &amp; Properties</div>
           <div style="margin-bottom: 10px;">
-            <label style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase;">Material</label>
+            <label for="material-select" style="font-size: 0.74rem; color: var(--text-muted); text-transform: uppercase;">Material</label>
             <select id="material-select" class="cad-select">
               <option value="steel">Tool Steel (7.85 g/cm³)</option>
               <option value="aluminum">Anodized Aluminum (2.70 g/cm³)</option>
@@ -175,7 +176,7 @@
     <div class="modal-window">
       <div class="modal-header">
         <h3>Technical Data Sheet &amp; Specification</h3>
-        <button class="modal-close-btn" id="modal-close">&times;</button>
+        <button class="modal-close-btn" id="modal-close" aria-label="Close">&times;</button>
       </div>
       <div class="modal-body" id="modal-spec-content">
         <!-- Injected via app.js -->

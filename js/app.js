@@ -26,11 +26,11 @@ const PART_SCHEMAS = {
       { id: 'boreDiameter', label: 'Bore Ø (d_i)', min: 6, max: 60, step: 1, default: 18, unit: 'mm' },
       { id: 'pressureAngle', label: 'Pressure Angle (α)', min: 14.5, max: 25.0, step: 0.5, default: 20.0, unit: '°' },
       { id: 'hasKeyway', label: 'Keyway Enabled', type: 'checkbox', default: true },
-      { id: 'keywayWidth', label: 'Keyway Width (b)', min: 2, max: 16, step: 1, default: 6, unit: 'mm' },
-      { id: 'keywayDepth', label: 'Keyway Depth (t)', min: 1, max: 8, step: 0.2, default: 2.8, unit: 'mm' },
+      { id: 'keywayWidth', label: 'Keyway Width (b)', min: 2, max: 16, step: 1, default: 6, unit: 'mm', dependsOn: 'hasKeyway' },
+      { id: 'keywayDepth', label: 'Keyway Depth (t)', min: 1, max: 8, step: 0.2, default: 2.8, unit: 'mm', dependsOn: 'hasKeyway' },
       { id: 'hasHub', label: 'Hub Enabled', type: 'checkbox', default: true },
-      { id: 'hubDiameter', label: 'Hub Ø', min: 15, max: 80, step: 1, default: 36, unit: 'mm' },
-      { id: 'hubLength', label: 'Hub Length', min: 2, max: 40, step: 1, default: 10, unit: 'mm' }
+      { id: 'hubDiameter', label: 'Hub Ø', min: 15, max: 80, step: 1, default: 36, unit: 'mm', dependsOn: 'hasHub' },
+      { id: 'hubLength', label: 'Hub Length', min: 2, max: 40, step: 1, default: 10, unit: 'mm', dependsOn: 'hasHub' }
     ]
   },
   flange: {
@@ -43,13 +43,13 @@ const PART_SCHEMAS = {
       { id: 'flangeThick', label: 'Flange Thickness (C)', min: 10, max: 50, step: 1, default: 18, unit: 'mm' },
       { id: 'pipeOutDia', label: 'Pipe Neck Outer Ø', min: 40, max: 200, step: 1, default: 76.1, unit: 'mm' },
       { id: 'pipeInDia', label: 'Pipe Inner Bore Ø', min: 25, max: 180, step: 1, default: 60.0, unit: 'mm' },
-      { id: 'neckHeight', label: 'Welding Neck Height (H)', min: 10, max: 100, step: 5, default: 35, unit: 'mm' },
+      { id: 'neckHeight', label: 'Welding Neck Height (H)', min: 0, max: 100, step: 5, default: 35, unit: 'mm' },
       { id: 'boltCircleDia', label: 'Bolt Circle Ø (K)', min: 60, max: 250, step: 5, default: 125, unit: 'mm' },
       { id: 'numBolts', label: 'Bolt Holes (n)', min: 4, max: 16, step: 2, default: 4, unit: '' },
       { id: 'boltHoleDia', label: 'Bolt Hole Ø (d)', min: 8, max: 30, step: 1, default: 18, unit: 'mm' },
       { id: 'hasRaisedFace', label: 'Raised Face Enabled', type: 'checkbox', default: true },
-      { id: 'raisedFaceDia', label: 'Raised Face Ø', min: 50, max: 200, step: 5, default: 110, unit: 'mm' },
-      { id: 'raisedFaceHeight', label: 'Raised Face Height', min: 1, max: 10, step: 0.5, default: 3, unit: 'mm' }
+      { id: 'raisedFaceDia', label: 'Raised Face Ø', min: 50, max: 200, step: 5, default: 110, unit: 'mm', dependsOn: 'hasRaisedFace' },
+      { id: 'raisedFaceHeight', label: 'Raised Face Height', min: 1, max: 10, step: 0.5, default: 3, unit: 'mm', dependsOn: 'hasRaisedFace' }
     ]
   },
   enclosure: {
@@ -81,7 +81,7 @@ const PART_SCHEMAS = {
       { id: 'len3', label: 'Step 3 Length', min: 10, max: 80, step: 5, default: 25, unit: 'mm' },
       { id: 'dia4', label: 'Step 4 Ø (Bearing Seat 2)', min: 15, max: 80, step: 1, default: 35, unit: 'mm' },
       { id: 'len4', label: 'Step 4 Length', min: 15, max: 100, step: 5, default: 45, unit: 'mm' },
-      { id: 'chamfer', label: 'Lead-in Chamfer', min: 0.5, max: 4.0, step: 0.5, default: 1.5, unit: 'mm' },
+      { id: 'chamfer', label: 'Lead-in Chamfer', min: 0, max: 4.0, step: 0.5, default: 1.5, unit: 'mm' },
       { id: 'centerBore', label: 'Center Hole Ø', min: 0, max: 12, step: 1, default: 6, unit: 'mm' }
     ]
   },
@@ -96,7 +96,7 @@ const PART_SCHEMAS = {
       { id: 'headWidth', label: 'Width Across Flats (s)', min: 7, max: 46, step: 1, default: 19, unit: 'mm' },
       { id: 'headHeight', label: 'Head Height (k)', min: 3, max: 20, step: 0.5, default: 7.5, unit: 'mm' },
       { id: 'hasNut', label: 'Show Hex Nut', type: 'checkbox', default: true },
-      { id: 'nutPosition', label: 'Nut Position Along Shank', min: 2, max: 140, step: 2, default: 35, unit: 'mm' }
+      { id: 'nutPosition', label: 'Nut Position Along Shank', min: 2, max: 140, step: 2, default: 35, unit: 'mm', dependsOn: 'hasNut' }
     ]
   }
 };
@@ -107,6 +107,8 @@ class AppController {
     this.currentPartKey = 'gear';
     this.currentParams = {};
     this.currentGeometry = null;
+    this.importedMeshInfo = null; // { fileName, format } when external STL/OBJ is active
+    this.lastMetrics = null;
 
     this.initUI();
     this.loadPart('gear');
@@ -170,21 +172,28 @@ class AppController {
     const clipWidget = document.getElementById('clipping-widget');
     const clipSlider = document.getElementById('clipping-slider');
     const clipAxisSelect = document.getElementById('clipping-axis');
+    const clipValDisplay = document.getElementById('clipping-val-display');
 
     clipBtn.onclick = () => {
       const enabled = !this.engine.clippingEnabled;
       clipBtn.classList.toggle('active', enabled);
       clipWidget.classList.toggle('visible', enabled);
-      this.engine.setClipping(enabled, clipAxisSelect.value, parseFloat(clipSlider.value));
+      if (enabled) {
+        this.engine.clippingEnabled = true;
+        this.syncClippingRange(true);
+      } else {
+        this.engine.setClipping(false, clipAxisSelect.value, parseFloat(clipSlider.value));
+      }
     };
 
     clipSlider.oninput = (e) => {
-      this.engine.setClipping(true, clipAxisSelect.value, parseFloat(e.target.value));
-      document.getElementById('clipping-val-display').textContent = `${e.target.value} mm`;
+      const val = parseFloat(e.target.value);
+      this.engine.setClipping(true, clipAxisSelect.value, val);
+      clipValDisplay.textContent = `${val.toFixed(1).replace(/\.0$/, '')} mm`;
     };
 
-    clipAxisSelect.onchange = (e) => {
-      this.engine.setClipping(true, e.target.value, parseFloat(clipSlider.value));
+    clipAxisSelect.onchange = () => {
+      this.syncClippingRange(true);
     };
 
     // Dimensioning Toggle
@@ -206,25 +215,76 @@ class AppController {
     // Exporter buttons
     document.getElementById('btn-export-stl').onclick = () => {
       if (this.currentGeometry) {
-        CADExporters.exportBinarySTL(this.currentGeometry, `${this.currentPartKey}_model.stl`);
+        CADExporters.exportBinarySTL(this.currentGeometry, `${this._getExportBaseName()}.stl`);
       }
     };
 
     document.getElementById('btn-export-obj').onclick = () => {
       if (this.currentGeometry) {
-        CADExporters.exportOBJ(this.currentGeometry, `${this.currentPartKey}_model.obj`);
+        CADExporters.exportOBJ(this.currentGeometry, `${this._getExportBaseName()}.obj`);
       }
     };
 
+    // Spec Sheet Modal
+    const specModal = document.getElementById('spec-modal');
     document.getElementById('btn-spec-sheet').onclick = () => this.showSpecSheet();
     document.getElementById('modal-close').onclick = () => this.hideSpecSheet();
+    specModal.addEventListener('click', (e) => {
+      if (e.target === specModal) this.hideSpecSheet();
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && specModal.classList.contains('visible')) {
+        this.hideSpecSheet();
+      }
+    });
 
-    // Drag and Drop STL / OBJ support
+    // Drag-and-Drop + Click-to-Browse STL / OBJ support
     this.setupDragAndDrop();
+  }
+
+  _getExportBaseName() {
+    if (this.importedMeshInfo) {
+      return this.importedMeshInfo.fileName.replace(/\.[^.]+$/, '') || 'imported_model';
+    }
+    return `${this.currentPartKey}_model`;
+  }
+
+  /**
+   * Synchronize section plane slider range to active mesh bounding box
+   */
+  syncClippingRange(resetToCenter = false) {
+    if (!this.currentGeometry || !this.currentGeometry.boundingBox) return;
+
+    const clipSlider = document.getElementById('clipping-slider');
+    const clipAxisSelect = document.getElementById('clipping-axis');
+    const clipValDisplay = document.getElementById('clipping-val-display');
+    const axis = clipAxisSelect.value;
+    const bBox = this.currentGeometry.boundingBox;
+
+    const span = Math.max(2, bBox.max[axis] - bBox.min[axis]);
+    const pad = Math.max(2, Math.ceil(span * 0.08));
+    const minVal = Math.floor(bBox.min[axis] - pad);
+    const maxVal = Math.ceil(bBox.max[axis] + pad);
+    const step = span < 30 ? 0.5 : 1;
+
+    clipSlider.min = minVal;
+    clipSlider.max = maxVal;
+    clipSlider.step = step;
+
+    let currentVal = resetToCenter ? 0 : parseFloat(clipSlider.value);
+    if (!Number.isFinite(currentVal)) currentVal = 0;
+    currentVal = Math.min(maxVal, Math.max(minVal, currentVal));
+    clipSlider.value = currentVal;
+    clipValDisplay.textContent = `${currentVal.toFixed(1).replace(/\.0$/, '')} mm`;
+
+    if (this.engine.clippingEnabled) {
+      this.engine.setClipping(true, axis, currentVal);
+    }
   }
 
   loadPart(key) {
     this.currentPartKey = key;
+    this.importedMeshInfo = null;
     const schema = PART_SCHEMAS[key];
 
     // Highlight card
@@ -241,8 +301,8 @@ class AppController {
     // Build parameter UI
     this.renderParameterControls(schema);
 
-    // Generate part
-    this.regeneratePart();
+    // Generate part and auto-frame camera for newly chosen part
+    this.regeneratePart(true);
   }
 
   renderParameterControls(schema) {
@@ -253,32 +313,39 @@ class AppController {
     group.className = 'param-group';
     group.innerHTML = `<div class="param-group-title">${schema.name} Parameters</div>`;
 
+    const dependentRows = [];
+
     schema.params.forEach(p => {
       const row = document.createElement('div');
       row.className = 'param-row';
+      if (p.dependsOn) {
+        dependentRows.push({ row, dependsOn: p.dependsOn });
+      }
 
       if (p.type === 'checkbox') {
         row.innerHTML = `
           <div class="param-label-row">
-            <span class="param-name">${p.label}</span>
+            <label class="param-name" for="input-${p.id}" style="cursor:pointer;">${p.label}</label>
             <input type="checkbox" id="input-${p.id}" ${p.default ? 'checked' : ''} style="cursor:pointer;">
           </div>
         `;
         const chk = row.querySelector(`#input-${p.id}`);
         chk.onchange = (e) => {
           this.currentParams[p.id] = e.target.checked;
+          this._updateDependentStates(dependentRows);
           this.regeneratePart();
         };
       } else {
+        const unitSuffix = p.unit ? ` ${p.unit}` : '';
         row.innerHTML = `
           <div class="param-label-row">
             <span class="param-name">${p.label}</span>
-            <span class="param-value" id="val-${p.id}">${p.default} ${p.unit}</span>
+            <span class="param-value" id="val-${p.id}">${p.default}${unitSuffix}</span>
           </div>
           <div class="param-input-wrap">
-            <input type="range" class="cad-slider" id="slider-${p.id}" 
+            <input type="range" class="cad-slider" id="slider-${p.id}"
                    min="${p.min}" max="${p.max}" step="${p.step}" value="${p.default}">
-            <input type="number" class="cad-num-input" id="num-${p.id}" 
+            <input type="number" class="cad-num-input" id="num-${p.id}"
                    min="${p.min}" max="${p.max}" step="${p.step}" value="${p.default}">
           </div>
         `;
@@ -287,32 +354,57 @@ class AppController {
         const num = row.querySelector(`#num-${p.id}`);
         const display = row.querySelector(`#val-${p.id}`);
 
-        const updateVal = (val) => {
-          const numVal = parseFloat(val);
-          slider.value = numVal;
-          num.value = numVal;
-          display.textContent = `${numVal} ${p.unit}`;
-          this.currentParams[p.id] = numVal;
+        const applyValue = (rawVal, clampAndSync = true) => {
+          const parsed = parseFloat(rawVal);
+          if (!Number.isFinite(parsed)) {
+            if (clampAndSync) {
+              const fallback = this.currentParams[p.id];
+              slider.value = fallback;
+              num.value = fallback;
+              display.textContent = `${fallback}${unitSuffix}`;
+            }
+            return;
+          }
+          const clamped = clampAndSync ? Math.min(p.max, Math.max(p.min, parsed)) : parsed;
+          slider.value = clamped;
+          if (clampAndSync) num.value = clamped;
+          display.textContent = `${clamped}${unitSuffix}`;
+          this.currentParams[p.id] = clamped;
           this.regeneratePart();
         };
 
-        slider.oninput = (e) => updateVal(e.target.value);
-        num.onchange = (e) => updateVal(e.target.value);
+        slider.oninput = (e) => applyValue(e.target.value, true);
+        num.onchange = (e) => applyValue(e.target.value, true);
       }
 
       group.appendChild(row);
     });
 
+    this._updateDependentStates(dependentRows);
     container.appendChild(group);
   }
 
-  regeneratePart() {
+  _updateDependentStates(dependentRows) {
+    dependentRows.forEach(({ row, dependsOn }) => {
+      const enabled = Boolean(this.currentParams[dependsOn]);
+      row.classList.toggle('disabled', !enabled);
+      row.querySelectorAll('input').forEach(inp => {
+        inp.disabled = !enabled;
+      });
+    });
+  }
+
+  regeneratePart(fitCamera = false) {
     const schema = PART_SCHEMAS[this.currentPartKey];
     if (!schema) return;
 
     try {
       this.currentGeometry = schema.generator(this.currentParams);
       this.engine.setMesh(this.currentGeometry);
+      this.syncClippingRange(fitCamera);
+      if (fitCamera) {
+        this.engine.setView('iso');
+      }
       this.updateMetrics();
       this.updateStatusBar();
     } catch (err) {
@@ -321,34 +413,53 @@ class AppController {
   }
 
   /**
-   * Precise analytical volume & surface calculation
+   * Precise analytical volume & surface calculation (zero temporary geometry allocations)
    */
   updateMetrics() {
     if (!this.currentGeometry) return;
 
-    const geom = this.currentGeometry.index ? this.currentGeometry.toNonIndexed() : this.currentGeometry;
-    const pos = geom.attributes.position.array;
+    const posAttr = this.currentGeometry.attributes.position;
+    const pos = posAttr.array;
+    const indexAttr = this.currentGeometry.index;
 
-    // 1. Precise Signed Volume of Tetrahedrons (mm³)
     let volumeMm3 = 0;
+    let areaMm2 = 0;
+
     const p1 = new THREE.Vector3();
     const p2 = new THREE.Vector3();
     const p3 = new THREE.Vector3();
-    let areaMm2 = 0;
+    const cross = new THREE.Vector3();
+    const vA = new THREE.Vector3();
+    const vB = new THREE.Vector3();
 
-    for (let i = 0; i < pos.length; i += 9) {
-      p1.set(pos[i], pos[i + 1], pos[i + 2]);
-      p2.set(pos[i + 3], pos[i + 4], pos[i + 5]);
-      p3.set(pos[i + 6], pos[i + 7], pos[i + 8]);
+    const accumTriangle = (i1, i2, i3) => {
+      const o1 = i1 * 3;
+      const o2 = i2 * 3;
+      const o3 = i3 * 3;
+      p1.set(pos[o1], pos[o1 + 1], pos[o1 + 2]);
+      p2.set(pos[o2], pos[o2 + 1], pos[o2 + 2]);
+      p3.set(pos[o3], pos[o3 + 1], pos[o3 + 2]);
 
-      // Signed volume = (p1 . (p2 x p3)) / 6
-      const cross = new THREE.Vector3().crossVectors(p2, p3);
+      // Signed tetrahedron volume = (p1 · (p2 × p3)) / 6
+      cross.crossVectors(p2, p3);
       volumeMm3 += p1.dot(cross) / 6.0;
 
-      // Surface area of triangle = 0.5 * |(p2 - p1) x (p3 - p1)|
-      const vA = new THREE.Vector3().subVectors(p2, p1);
-      const vB = new THREE.Vector3().subVectors(p3, p1);
+      // Triangle surface area = 0.5 * |(p2 - p1) × (p3 - p1)|
+      vA.subVectors(p2, p1);
+      vB.subVectors(p3, p1);
       areaMm2 += vA.cross(vB).length() * 0.5;
+    };
+
+    if (indexAttr) {
+      const idx = indexAttr.array;
+      for (let i = 0; i + 2 < idx.length; i += 3) {
+        accumTriangle(idx[i], idx[i + 1], idx[i + 2]);
+      }
+    } else {
+      const vertCount = posAttr.count;
+      for (let i = 0; i + 2 < vertCount; i += 3) {
+        accumTriangle(i, i + 1, i + 2);
+      }
     }
 
     const absVolumeCm3 = Math.abs(volumeMm3) / 1000.0;
@@ -368,7 +479,9 @@ class AppController {
     // Update DOM
     document.getElementById('metric-vol').textContent = `${absVolumeCm3.toFixed(2)} cm³`;
     document.getElementById('metric-area').textContent = `${areaCm2.toFixed(1)} cm²`;
-    document.getElementById('metric-mass').textContent = massGram > 1000 ? `${(massGram / 1000).toFixed(2)} kg` : `${massGram.toFixed(1)} g`;
+    document.getElementById('metric-mass').textContent = massGram >= 1000
+      ? `${(massGram / 1000).toFixed(2)} kg`
+      : `${massGram.toFixed(1)} g`;
     document.getElementById('metric-bbox').textContent = `${dx} × ${dy} × ${dz} mm`;
 
     this.lastMetrics = {
@@ -380,32 +493,83 @@ class AppController {
     };
   }
 
+  _getTriangleCount(geometry) {
+    if (!geometry || !geometry.attributes.position) return 0;
+    if (geometry.index) {
+      return Math.floor(geometry.index.count / 3);
+    }
+    return Math.floor(geometry.attributes.position.count / 3);
+  }
+
   updateStatusBar() {
     if (!this.currentGeometry) return;
-    const triangleCount = (this.currentGeometry.attributes.position.count / 3) || 0;
+    const triangleCount = this._getTriangleCount(this.currentGeometry);
     document.getElementById('sb-triangles').textContent = `${triangleCount.toLocaleString('en-US')} Triangles`;
-    document.getElementById('sb-part-name').textContent = PART_SCHEMAS[this.currentPartKey].name;
+    document.getElementById('sb-part-name').textContent = this.importedMeshInfo
+      ? `Imported: ${this.importedMeshInfo.fileName}`
+      : PART_SCHEMAS[this.currentPartKey].name;
+  }
+
+  _escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
   showSpecSheet() {
     if (!this.lastMetrics) return;
     const modal = document.getElementById('spec-modal');
     const body = document.getElementById('modal-spec-content');
+    const triangles = this._getTriangleCount(this.currentGeometry);
 
-    let paramRows = '';
-    const schema = PART_SCHEMAS[this.currentPartKey];
-    schema.params.forEach(p => {
-      const val = this.currentParams[p.id];
-      const formattedVal = typeof val === 'boolean' ? (val ? 'Yes' : 'No') : val;
-      paramRows += `<tr>
-        <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">${p.label}</td>
-        <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${formattedVal} ${p.unit || ''}</td>
-      </tr>`;
-    });
+    let title = '';
+    let detailsHtml = '';
+
+    if (this.importedMeshInfo) {
+      title = `Imported Mesh — ${this._escapeHtml(this.importedMeshInfo.fileName)}`;
+      detailsHtml = `
+        <h5 style="color:#d4af37; margin-bottom:8px; text-transform:uppercase; font-size:0.75rem;">Import Details</h5>
+        <table style="width:100%; border-collapse: collapse; font-size:0.85rem;">
+          <tr>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">Source File</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${this._escapeHtml(this.importedMeshInfo.fileName)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">Detected Format</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${this.importedMeshInfo.format}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">Triangle Count</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${triangles.toLocaleString('en-US')}</td>
+          </tr>
+        </table>
+      `;
+    } else {
+      const schema = PART_SCHEMAS[this.currentPartKey];
+      title = schema.name;
+      let paramRows = '';
+      schema.params.forEach(p => {
+        if (p.dependsOn && !this.currentParams[p.dependsOn]) return;
+        const val = this.currentParams[p.id];
+        const formattedVal = typeof val === 'boolean' ? (val ? 'Yes' : 'No') : val;
+        paramRows += `<tr>
+          <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">${p.label}</td>
+          <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${formattedVal} ${p.unit || ''}</td>
+        </tr>`;
+      });
+      detailsHtml = `
+        <h5 style="color:#d4af37; margin-bottom:8px; text-transform:uppercase; font-size:0.75rem;">Design Parameters</h5>
+        <table style="width:100%; border-collapse: collapse; font-size:0.85rem;">
+          ${paramRows}
+        </table>
+      `;
+    }
 
     body.innerHTML = `
       <div style="margin-bottom: 16px;">
-        <h4 style="color:#00d2d3; margin-bottom:4px;">${schema.name}</h4>
+        <h4 style="color:#00d2d3; margin-bottom:4px;">${title}</h4>
         <p style="font-size:0.82rem; color:#888;">Generated with Web-CAD Studio on ${new Date().toLocaleDateString('en-US')} at ${new Date().toLocaleTimeString('en-US')}</p>
       </div>
 
@@ -413,17 +577,15 @@ class AppController {
         <h5 style="color:#d4af37; margin-bottom:8px; text-transform:uppercase; font-size:0.75rem;">Physical Properties</h5>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.85rem;">
           <div>Material: <strong>${this.lastMetrics.material}</strong></div>
-          <div>Mass: <strong>${this.lastMetrics.massGram > 1000 ? (this.lastMetrics.massGram / 1000).toFixed(3) + ' kg' : this.lastMetrics.massGram.toFixed(1) + ' g'}</strong></div>
+          <div>Mass: <strong>${this.lastMetrics.massGram >= 1000 ? (this.lastMetrics.massGram / 1000).toFixed(3) + ' kg' : this.lastMetrics.massGram.toFixed(1) + ' g'}</strong></div>
           <div>Volume: <strong>${this.lastMetrics.volumeCm3.toFixed(2)} cm³</strong></div>
           <div>Surface Area: <strong>${this.lastMetrics.areaCm2.toFixed(1)} cm²</strong></div>
-          <div style="grid-column: span 2;">Bounding Box: <strong>${this.lastMetrics.bbox}</strong></div>
+          <div>Mesh Triangles: <strong>${triangles.toLocaleString('en-US')}</strong></div>
+          <div>Bounding Box: <strong>${this.lastMetrics.bbox}</strong></div>
         </div>
       </div>
 
-      <h5 style="color:#d4af37; margin-bottom:8px; text-transform:uppercase; font-size:0.75rem;">Design Parameters</h5>
-      <table style="width:100%; border-collapse: collapse; font-size:0.85rem;">
-        ${paramRows}
-      </table>
+      ${detailsHtml}
     `;
 
     modal.classList.add('visible');
@@ -435,24 +597,138 @@ class AppController {
 
   setupDragAndDrop() {
     const dropArea = this.engine.container;
+    const dropZoneCard = document.getElementById('import-drop-zone');
+    const fileInput = document.getElementById('file-import-input');
 
-    dropArea.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropArea.style.filter = 'brightness(1.2)';
-    });
+    const attachDropHandlers = (el) => {
+      if (!el) return;
+      el.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        el.classList.add('drag-over');
+      });
+      el.addEventListener('dragleave', () => {
+        el.classList.remove('drag-over');
+      });
+      el.addEventListener('drop', (e) => {
+        e.preventDefault();
+        el.classList.remove('drag-over');
+        if (e.dataTransfer.files.length > 0) {
+          this.loadExternalFile(e.dataTransfer.files[0]);
+        }
+      });
+    };
 
-    dropArea.addEventListener('dragleave', () => {
-      dropArea.style.filter = 'none';
-    });
+    attachDropHandlers(dropArea);
+    attachDropHandlers(dropZoneCard);
 
-    dropArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropArea.style.filter = 'none';
-      if (e.dataTransfer.files.length > 0) {
-        const file = e.dataTransfer.files[0];
-        this.loadExternalFile(file);
+    if (dropZoneCard && fileInput) {
+      dropZoneCard.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          this.loadExternalFile(e.target.files[0]);
+          fileInput.value = '';
+        }
+      });
+    }
+  }
+
+  _parseBinarySTL(buffer) {
+    if (buffer.byteLength < 84) return null;
+    const view = new DataView(buffer);
+    const triangles = view.getUint32(80, true);
+    const expectedSize = 84 + triangles * 50;
+    if (triangles === 0 || expectedSize !== buffer.byteLength) return null;
+
+    const positions = new Float32Array(triangles * 9);
+    const normals = new Float32Array(triangles * 9);
+    let offset = 84;
+    let posIdx = 0;
+    let hasValidNormals = false;
+
+    for (let i = 0; i < triangles; i++) {
+      const nx = view.getFloat32(offset, true);
+      const ny = view.getFloat32(offset + 4, true);
+      const nz = view.getFloat32(offset + 8, true);
+      if (nx * nx + ny * ny + nz * nz > 1e-8) hasValidNormals = true;
+      offset += 12;
+
+      for (let v = 0; v < 3; v++) {
+        positions[posIdx] = view.getFloat32(offset, true);
+        positions[posIdx + 1] = view.getFloat32(offset + 4, true);
+        positions[posIdx + 2] = view.getFloat32(offset + 8, true);
+
+        normals[posIdx] = nx;
+        normals[posIdx + 1] = ny;
+        normals[posIdx + 2] = nz;
+
+        offset += 12;
+        posIdx += 3;
       }
-    });
+      offset += 2;
+    }
+
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    if (hasValidNormals) {
+      geom.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+    } else {
+      geom.computeVertexNormals();
+    }
+    return geom;
+  }
+
+  _parseAsciiSTL(text) {
+    const positions = [];
+    const regex = /vertex\s+([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s+([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s+([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)/g;
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      positions.push(parseFloat(match[1]), parseFloat(match[2]), parseFloat(match[3]));
+    }
+    if (positions.length < 9) return null;
+
+    const usableLen = positions.length - (positions.length % 9);
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions.slice(0, usableLen)), 3));
+    geom.computeVertexNormals();
+    return geom;
+  }
+
+  _parseOBJ(text) {
+    const verts = [];
+    const positions = [];
+    const lines = text.split(/\r?\n/);
+
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith('#')) continue;
+      if (line.startsWith('v ')) {
+        const parts = line.split(/\s+/);
+        if (parts.length >= 4) {
+          verts.push([parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3])]);
+        }
+      } else if (line.startsWith('f ')) {
+        const parts = line.split(/\s+/).slice(1);
+        const faceIdx = parts.map(tok => {
+          const idx = parseInt(tok.split('/')[0], 10);
+          return idx < 0 ? verts.length + idx : idx - 1;
+        });
+        // Fan triangulation for triangles & convex n-gons
+        for (let i = 1; i + 1 < faceIdx.length; i++) {
+          const a = verts[faceIdx[0]];
+          const b = verts[faceIdx[i]];
+          const c = verts[faceIdx[i + 1]];
+          if (a && b && c) {
+            positions.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]);
+          }
+        }
+      }
+    }
+
+    if (positions.length < 9) return null;
+    const geom = new THREE.BufferGeometry();
+    geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+    geom.computeVertexNormals();
+    return geom;
   }
 
   loadExternalFile(file) {
@@ -460,46 +736,59 @@ class AppController {
     reader.onload = (e) => {
       try {
         const buffer = e.target.result;
-        // Simple binary STL parser
-        const view = new DataView(buffer);
-        const triangles = view.getUint32(80, true);
-        const positions = new Float32Array(triangles * 9);
-        const normals = new Float32Array(triangles * 9);
+        const lowerName = file.name.toLowerCase();
+        let geom = null;
+        let format = '';
 
-        let offset = 84;
-        let posIdx = 0;
-
-        for (let i = 0; i < triangles; i++) {
-          const nx = view.getFloat32(offset, true);
-          const ny = view.getFloat32(offset + 4, true);
-          const nz = view.getFloat32(offset + 8, true);
-          offset += 12;
-
-          for (let v = 0; v < 3; v++) {
-            positions[posIdx] = view.getFloat32(offset, true);
-            positions[posIdx + 1] = view.getFloat32(offset + 4, true);
-            positions[posIdx + 2] = view.getFloat32(offset + 8, true);
-
-            normals[posIdx] = nx;
-            normals[posIdx + 1] = ny;
-            normals[posIdx + 2] = nz;
-
-            offset += 12;
-            posIdx += 3;
+        if (lowerName.endsWith('.obj')) {
+          const text = new TextDecoder('utf-8').decode(buffer);
+          geom = this._parseOBJ(text);
+          format = 'Wavefront OBJ';
+        } else {
+          // Try strict Binary STL first, fall back to ASCII STL
+          geom = this._parseBinarySTL(buffer);
+          if (geom) {
+            format = 'Binary STL';
+          } else {
+            const text = new TextDecoder('utf-8').decode(buffer);
+            geom = this._parseAsciiSTL(text);
+            format = 'ASCII STL';
           }
-          offset += 2; // attribute byte count
         }
 
-        const geom = new THREE.BufferGeometry();
-        geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geom.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+        if (!geom) {
+          throw new Error('Unsupported or malformed mesh file');
+        }
 
+        this.importedMeshInfo = { fileName: file.name, format };
         this.currentGeometry = geom;
         this.engine.setMesh(geom);
+        this.syncClippingRange(true);
+        this.engine.setView('iso');
         this.updateMetrics();
-        document.getElementById('sb-part-name').textContent = `Imported: ${file.name}`;
+        this.updateStatusBar();
+
+        // Update catalog active state & right sidebar info
+        document.querySelectorAll('.part-card').forEach(c => c.classList.remove('active'));
+        const paramContainer = document.getElementById('parameters-container');
+        paramContainer.innerHTML = `
+          <div class="param-group">
+            <div class="param-group-title">Imported Mesh</div>
+            <p style="font-size: 0.82rem; color: var(--text-main); margin-bottom: 6px; word-break: break-word;">
+              <strong>${this._escapeHtml(file.name)}</strong>
+            </p>
+            <p style="font-size: 0.76rem; color: var(--text-muted); margin-bottom: 12px;">
+              Format: ${format} · Use Section Plane, Dimensions, or Export above to inspect.
+            </p>
+            <button class="tool-btn" id="btn-back-parametric" style="width:100%; justify-content:center;">
+              ↩ Return to Parametric Library
+            </button>
+          </div>
+        `;
+        document.getElementById('btn-back-parametric').onclick = () => this.loadPart(this.currentPartKey || 'gear');
       } catch (err) {
-        alert('Error loading file. Please make sure it is a valid binary STL file.');
+        console.error('Import error:', err);
+        alert('Error loading file. Please choose a valid Binary STL, ASCII STL, or Wavefront OBJ file.');
       }
     };
     reader.readAsArrayBuffer(file);

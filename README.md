@@ -8,23 +8,23 @@ A modern, browser-based 3D CAD tool for interactive parameterization, inspection
 
 ### 1. Parametric Part Generators
 * **⚙️ Spur Gear (Involute Teeth):**
-  * Module ($m$), number of teeth ($z$), pressure angle ($\alpha=20^\circ$), face width ($b$).
-  * Center bore with optional keyway (DIN 6885) and cylindrical hub.
+  * True DIN 867 / ISO 53 involute flank geometry with configurable module ($m$), number of teeth ($z$), pressure angle ($\alpha$), and face width ($b$).
+  * Center bore with DIN 6885 keyway broached through both gear body and cylindrical hub.
 * **🔘 Pipe Flange (EN 1092-1 / DIN):**
-  * Flange outer diameter, flange thickness, welding neck with chamfer, pipe inner bore.
-  * Freely configurable bolt circle (number of bolts $n$, hole Ø, bolt circle Ø) and raised face.
+  * Flange outer diameter, flange thickness, tapered welding neck with weld bevel, and pipe inner bore.
+  * Configurable bolt circle (number of bolts $n$, hole Ø, bolt circle Ø) and raised face with automatic geometric clearance guards.
 * **📦 Electronics Enclosure:**
-  * Outer dimensions ($L \times W \times H$), wall thickness, corner radii ($R$).
-  * 4 integrated screw bosses with M3 pilot holes for lid fastening.
+  * Exact outer dimensions ($L \times W \times H$), wall thickness, and corner radii ($R$).
+  * 4 integrated screw bosses with pilot holes automatically inset clear of rounded corners.
 * **🪄 Gearbox Shaft (Multi-Stepped):**
   * 4 shaft steps (diameters & lengths individually customizable for drive ends and bearing seats).
-  * Lead-in chamfers and center hole (DIN 332).
+  * Lead-in chamfers, crisp machined shoulders, and 60° DIN 332 center holes.
 * **🔩 Hex Bolt & Nut (DIN 933):**
-  * Thread diameter (M4–M30), shank length, width across flats, head height, and positionable hex nut.
+  * Thread diameter (M4–M30), chamfered shank length, width across flats, head height, and positionable hex nut.
 
 ### 2. CAD Inspection & Analysis
 * **✂️ Dynamic Section Plane (Clipping Plane):**
-  * Live cross-section along the X, Y, or Z axis with a continuous position slider.
+  * Live cross-section along the Z, X, or Y axis with auto-ranged position slider, visual cut-plane indicator, and synchronized mesh + CAD edge clipping.
   * Ideal for inspecting cavities, wall thicknesses, and internal bores.
 * **📐 Exact Metric & Physics Calculation:**
   * **Volume:** Exact calculation via signed tetrahedron volume ($\sum \frac{p_1 \cdot (p_2 \times p_3)}{6}$).
@@ -38,15 +38,15 @@ A modern, browser-based 3D CAD tool for interactive parameterization, inspection
     * *Gray Cast Iron (7.20 g/cm³)*
   * **Bounding Box:** $X \times Y \times Z$ in mm.
 * **📏 3D Dimensioning & CAD Grid:**
-  * Z-axis-aligned metric working grid (DIN ISO 841).
-  * Three-dimensional bounding-box wireframe overlay.
+  * True Z-Up metric XY working grid (DIN ISO 841).
+  * 3D bounding-box wireframe with live X / Y / Z millimeter dimension callouts.
 
 ### 3. Visualization Modes & Camera
-* **Standard CAD Views:** Isometric, Top, Front, Right.
-* **Camera Projection:** Switch between perspective camera and distortion-free **orthographic projection**.
+* **Standard CAD Views:** Isometric, Top, Front, Right — automatically fitted to active part dimensions.
+* **Camera Projection:** Seamless switch between perspective camera and distortion-free **orthographic projection** (preserving framing and zoom).
 * **Shader Modes:**
   * *CAD Edges (Shaded + Outlines)*: Highlighted edges for a technical drawing look.
-  * *Shaded*: PBR material with roughness and metallic sheen.
+  * *Shaded*: Studio-lit PBR materials with procedural reflections.
   * *Wireframe*: Triangle mesh structure.
   * *X-Ray / Ghost*: Translucent display of hidden internal geometry.
   * *Normals*: Color-coded surface normals for curvature inspection.
@@ -57,9 +57,9 @@ A modern, browser-based 3D CAD tool for interactive parameterization, inspection
 * **📦 OBJ Export:**
   * Wavefront OBJ with normals for downstream workflows in Blender, CAD, or rendering suites.
 * **📄 Technical Data Sheet:**
-  * Generates a structured inspection report with timestamp, all dimensions, material, and mass.
-* **📁 Drag & Drop STL Import:**
-  * Any external `.stl` file can be dragged and dropped directly into the 3D viewport to measure and section.
+  * Generates a structured inspection report with timestamp, all active dimensions, material, triangle count, and mass (supports both parametric and imported meshes).
+* **📁 Drag & Drop / Browse STL & OBJ Import:**
+  * Supports Binary STL, ASCII STL, and Wavefront OBJ files directly in the browser to measure, inspect, and section.
 
 ---
 
