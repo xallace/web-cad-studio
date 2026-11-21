@@ -567,7 +567,7 @@ class CADEngine {
     ctx.fill();
     ctx.stroke();
 
-    ctx.font = 'bold 26px Consolas, monospace';
+    ctx.font = 'bold 26px Iosevka Charon Mono, Consolas, monospace';
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

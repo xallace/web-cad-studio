@@ -735,15 +735,15 @@ class AppController {
         <table style="width:100%; border-collapse: collapse; font-size:0.85rem;">
           <tr>
             <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">Source File</td>
-            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${this._escapeHtml(this.importedMeshInfo.fileName)}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: var(--xt-mono); font-weight:600; text-align:right;">${this._escapeHtml(this.importedMeshInfo.fileName)}</td>
           </tr>
           <tr>
             <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">Detected Format</td>
-            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${this.importedMeshInfo.format}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: var(--xt-mono); font-weight:600; text-align:right;">${this.importedMeshInfo.format}</td>
           </tr>
           <tr>
             <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">Triangle Count</td>
-            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${triangles.toLocaleString('en-US')}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: var(--xt-mono); font-weight:600; text-align:right;">${triangles.toLocaleString('en-US')}</td>
           </tr>
         </table>
       `;
@@ -756,7 +756,7 @@ class AppController {
         schema.getSpecExtras(this.currentParams).forEach(extra => {
           paramRows += `<tr>
             <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">${this._escapeHtml(extra.label)}</td>
-            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right; color:#00d2d3;">${this._escapeHtml(extra.value)}</td>
+            <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: var(--xt-mono); font-weight:600; text-align:right; color:#00d2d3;">${this._escapeHtml(extra.value)}</td>
           </tr>`;
         });
       }
@@ -781,7 +781,7 @@ class AppController {
         }
         paramRows += `<tr>
           <td style="padding: 6px 10px; border-bottom: 1px solid #323642; color:#a0a5b0;">${this._escapeHtml(p.label)}</td>
-          <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: monospace; font-weight:600; text-align:right;">${this._escapeHtml(formattedVal)}</td>
+          <td style="padding: 6px 10px; border-bottom: 1px solid #323642; font-family: var(--xt-mono); font-weight:600; text-align:right;">${this._escapeHtml(formattedVal)}</td>
         </tr>`;
       });
       detailsHtml = `

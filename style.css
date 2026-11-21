@@ -12,8 +12,8 @@
   --accent-gold: #f59f00;
   --accent-green: #2ecc71;
   --accent-red: #ff4757;
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "JetBrains Mono", "SF Mono", "Consolas", "Courier New", monospace;
+  --font-sans: var(--xt-text);
+  --font-mono: var(--xt-mono);
   --header-height: 52px;
   --toolbar-height: 44px;
   --sidebar-width: 330px;
@@ -85,6 +85,7 @@ body {
   padding: 2px 7px;
   border-radius: 4px;
   font-weight: 600;
+  font-family: var(--xt-small);
 }
 
 .header-actions {
@@ -529,6 +530,7 @@ body {
   font-size: 0.7rem;
   color: var(--text-muted);
   text-transform: uppercase;
+  font-family: var(--xt-small);
 }
 
 .metric-val {
